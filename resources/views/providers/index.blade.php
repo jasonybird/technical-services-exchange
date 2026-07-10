@@ -17,19 +17,19 @@
             <div class="grid gap-4 lg:grid-cols-4">
                 <div class="lg:col-span-2">
                     <label for="q" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Search</label>
-                    <input id="q" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Business, headline, skill, or area" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    <input id="q" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Business, headline, skill, or area" class="tse-control mt-1 block w-full">
                 </div>
                 <div>
                     <label for="service_area" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Service area</label>
-                    <input id="service_area" name="service_area" value="{{ $filters['service_area'] ?? '' }}" placeholder="Tulsa, Oklahoma, Midwest" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    <input id="service_area" name="service_area" value="{{ $filters['service_area'] ?? '' }}" placeholder="Tulsa, Oklahoma, Midwest" class="tse-control mt-1 block w-full">
                 </div>
                 <div>
                     <label for="skill" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Skill</label>
-                    <input id="skill" name="skill" value="{{ $filters['skill'] ?? '' }}" placeholder="POS, network, cabling" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    <input id="skill" name="skill" value="{{ $filters['skill'] ?? '' }}" placeholder="POS, network, cabling" class="tse-control mt-1 block w-full">
                 </div>
                 <div>
                     <label for="technician_level" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Technician level</label>
-                    <select id="technician_level" name="technician_level" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    <select id="technician_level" name="technician_level" class="tse-control mt-1 block w-full">
                         <option value="">Any level</option>
                         @foreach ($technicianLevels as $level => $definition)
                             <option value="{{ $level }}" @selected((int) ($filters['technician_level'] ?? 0) === $level)>{{ $definition['name'] }}</option>
@@ -38,7 +38,7 @@
                 </div>
                 <div>
                     <label for="taxonomy_term_id" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Tag</label>
-                    <select id="taxonomy_term_id" name="taxonomy_term_id" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    <select id="taxonomy_term_id" name="taxonomy_term_id" class="tse-control mt-1 block w-full">
                         <option value="">Any tag</option>
                         @foreach ($taxonomyTerms as $term)
                             <option value="{{ $term->id }}" @selected((int) ($filters['taxonomy_term_id'] ?? 0) === $term->id)>{{ $term->name }} ({{ str_replace('_', ' ', $term->type) }})</option>
@@ -47,11 +47,11 @@
                 </div>
                 <div>
                     <label for="insurance" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Insurance</label>
-                    <input id="insurance" name="insurance" value="{{ $filters['insurance'] ?? '' }}" placeholder="Insured, COI available" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    <input id="insurance" name="insurance" value="{{ $filters['insurance'] ?? '' }}" placeholder="Insured, COI available" class="tse-control mt-1 block w-full">
                 </div>
                 <div>
                     <label for="sort" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Sort</label>
-                    <select id="sort" name="sort" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    <select id="sort" name="sort" class="tse-control mt-1 block w-full">
                         <option value="">Newest</option>
                         <option value="name" @selected(($filters['sort'] ?? '') === 'name')>Name</option>
                         <option value="rating" @selected(($filters['sort'] ?? '') === 'rating')>Community rating</option>
@@ -65,7 +65,7 @@
                 </div>
                 <div class="flex items-end gap-2">
                     <x-primary-button>Search</x-primary-button>
-                    <a href="{{ route('providers.index') }}" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">Reset</a>
+                    <a href="{{ route('providers.index') }}" class="tse-secondary-action">Reset</a>
                 </div>
             </div>
         </form>
@@ -138,10 +138,7 @@
                     @endif
                 </a>
             @empty
-                <div class="tse-panel p-8 text-center lg:col-span-2">
-                    <h3 class="text-base font-semibold text-slate-950 dark:text-white">No providers matched this search.</h3>
-                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Try removing one filter or broadening the service area.</p>
-                </div>
+                <x-empty-state class="lg:col-span-2" title="No providers matched this search." description="Try removing one filter or broadening the service area." />
             @endforelse
         </div>
 

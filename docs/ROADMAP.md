@@ -61,11 +61,11 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 
 ## Phase Checkpoint
 
-Phases 1-14A have been implemented locally through deployment/scaling hardening. The next active planning block is:
+Phases 1-15A have been implemented locally through UX/accessibility polish. The next active planning block is:
 
-1. UX/accessibility polish.
-2. Cached reputation aggregates after real slow pages are measured.
-3. Future email/push delivery and native-app API expansion once providers are selected.
+1. Cached reputation aggregates after real slow pages are measured.
+2. Future email/push delivery and native-app API expansion once providers are selected.
+3. Deeper operations/admin controls after real moderation and support workflows emerge.
 
 Work-order safeguards to carry into the next implementation passes:
 
@@ -166,6 +166,15 @@ Phase 14A deployment/scaling hardening completed:
 - Documented queue workers, scheduler, PHP-FPM expectations, Redis migration, backups, health checks, log rotation, storage scaling, and database scaling.
 - Kept cached reputation aggregates deferred until real traffic shows which pages need them.
 
+Phase 15A UX/accessibility polish completed:
+
+- Added shared form-control, secondary-action, and empty-state patterns.
+- Improved the jobs board with a page header, labeled filters, active filter badges, desktop table, and mobile card alternative.
+- Improved provider and buyer directory filters with shared control styling and reusable empty states.
+- Improved work-order listing with a dense desktop table, mobile cards, checklist/status badges, and direct print access.
+- Added accessible mobile-navigation button state and controls.
+- Improved work-order print packets with a summary strip, generated timestamp, scope-safeguard notice, and print page-break handling.
+
 Available-work safeguards to carry into directory and job-list phases:
 
 - Available jobs should expose pay type, provider terms, schedule type, work type, rough location, buyer reliability, support/contact certification, scope clarity status, and request/quote count.
@@ -173,7 +182,7 @@ Available-work safeguards to carry into directory and job-list phases:
 - Risk badges should identify broad scope, missing contact backup, missing deliverables, missing required tools, compressed schedules, and unclear closeout requirements.
 - Keep the primary filter bar compact: work category, coverage/radius or remote mode, keyword search, reset, and saved/advanced filters.
 - Model work categories as nested taxonomy records with broad families and specific specialties.
-- Keep every filter and table action visibly labeled or accessible to screen readers.
+- Keep every filter and table action visibly labeled or accessible to screen readers. Shared Phase 15A patterns now cover the primary jobs, provider, buyer, and work-order listing pages.
 
 The July 10, 2026 Field Nation product review is captured in `docs/PLATFORM_RESEARCH.md` and should inform Phases 5, 8, 9, and 10 without copying private third-party work-order data into this repository.
 

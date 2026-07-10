@@ -17,23 +17,23 @@
             <div class="grid gap-4 lg:grid-cols-4">
                 <div class="lg:col-span-2">
                     <label for="q" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Search</label>
-                    <input id="q" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Company, headline, category, or region" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    <input id="q" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Company, headline, category, or region" class="tse-control mt-1 block w-full">
                 </div>
                 <div>
                     <label for="category" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Service category</label>
-                    <input id="category" name="category" value="{{ $filters['category'] ?? '' }}" placeholder="Retail, IT, cabling" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    <input id="category" name="category" value="{{ $filters['category'] ?? '' }}" placeholder="Retail, IT, cabling" class="tse-control mt-1 block w-full">
                 </div>
                 <div>
                     <label for="region" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Hiring region</label>
-                    <input id="region" name="region" value="{{ $filters['region'] ?? '' }}" placeholder="Oklahoma, national, Midwest" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    <input id="region" name="region" value="{{ $filters['region'] ?? '' }}" placeholder="Oklahoma, national, Midwest" class="tse-control mt-1 block w-full">
                 </div>
                 <div>
                     <label for="payment" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Payment terms</label>
-                    <input id="payment" name="payment" value="{{ $filters['payment'] ?? '' }}" placeholder="ACH, Net 15, direct" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    <input id="payment" name="payment" value="{{ $filters['payment'] ?? '' }}" placeholder="ACH, Net 15, direct" class="tse-control mt-1 block w-full">
                 </div>
                 <div>
                     <label for="sort" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Sort</label>
-                    <select id="sort" name="sort" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    <select id="sort" name="sort" class="tse-control mt-1 block w-full">
                         <option value="">Newest</option>
                         <option value="name" @selected(($filters['sort'] ?? '') === 'name')>Name</option>
                         <option value="rating" @selected(($filters['sort'] ?? '') === 'rating')>Community rating</option>
@@ -47,7 +47,7 @@
                 </div>
                 <div class="flex items-end gap-2">
                     <x-primary-button>Search</x-primary-button>
-                    <a href="{{ route('buyers.index') }}" class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">Reset</a>
+                    <a href="{{ route('buyers.index') }}" class="tse-secondary-action">Reset</a>
                 </div>
             </div>
         </form>
@@ -105,10 +105,7 @@
                     @endif
                 </a>
             @empty
-                <div class="tse-panel p-8 text-center lg:col-span-2">
-                    <h3 class="text-base font-semibold text-slate-950 dark:text-white">No buyers matched this search.</h3>
-                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Try removing one filter or broadening the hiring region.</p>
-                </div>
+                <x-empty-state class="lg:col-span-2" title="No buyers matched this search." description="Try removing one filter or broadening the hiring region." />
             @endforelse
         </div>
 
