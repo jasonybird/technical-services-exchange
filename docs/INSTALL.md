@@ -22,6 +22,12 @@ From the app directory:
 bash scripts/update.sh
 ```
 
+To create a database/storage backup immediately before updating:
+
+```bash
+TSE_BACKUP_BEFORE_UPDATE=1 bash scripts/update.sh
+```
+
 Or from anywhere:
 
 ```bash
@@ -35,12 +41,29 @@ The preferred working loop for this project is:
 3. SSH to the server and run `bash scripts/update.sh` from the deployed Git checkout.
 4. Smoke test the live URL after the update completes.
 
+## Backups And Health Checks
+
+Create an on-demand backup from the app directory:
+
+```bash
+bash scripts/backup.sh
+```
+
+Backups default to `storage/app/backups`. Set `TSE_BACKUP_DIR=/path/to/backups` to store them elsewhere. Set `TSE_BACKUP_STORAGE=0` to back up only the database.
+
+Run a deployment health check from the app directory:
+
+```bash
+bash scripts/health-check.sh
+```
+
 ## Important Notes
 
 - The installer is a first-pass Ubuntu/Nginx helper, not a universal hosting panel installer.
 - Local and CI test runners need PHP SQLite and upload-test support: `pdo_sqlite`, `sqlite3`, `fileinfo`, and `gd`.
 - Public attachment serving needs `php artisan storage:link`; the checked-in update script runs this automatically.
 - Tune upload policy with `TSE_ATTACHMENT_DISK`, `TSE_ATTACHMENT_ROOT`, `TSE_ATTACHMENT_MAX_KB`, and `TSE_ATTACHMENT_MIME_TYPES`.
+- Tune backup policy with `TSE_BACKUP_DIR`, `TSE_BACKUP_STORAGE`, and optional `TSE_BACKUP_BEFORE_UPDATE=1`.
 - Review `.env` before production use.
 - Configure real mail before inviting users.
 - Move sessions, cache, and queues to Redis before serious traffic.

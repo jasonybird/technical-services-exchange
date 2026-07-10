@@ -22,6 +22,7 @@ This project uses Git as the primary rollback trail. The `.old` convention is re
 - Added post-work provider tag verification so buyers can confirm/dispute observed technician level and declared provider tags after completed work orders, with buyer-endorsed tag evidence shown on provider profiles.
 - Added Phase 11A mobile-safe API actions with versioned work-order endpoints, token ability checks, participant authorization, checklist/status/message/evidence/contact/running-late/schedule/dispute actions, mobile event audit records, optional geolocation evidence, API throttling, and baseline security headers.
 - Added Phase 12A/13A notification and admin governance controls with notification preference UI, event-level notification gating, moderation reports for profiles/jobs/attachments, reusable audit logs, and expanded admin triage panels.
+- Added Phase 14A deployment/scaling hardening with high-use database indexes, backup and health-check scripts, optional pre-update backups, and production notes for queue workers, scheduler, PHP-FPM, Redis, storage scaling, log rotation, and database scaling.
 - Created the Laravel Provider Exchange prototype with Breeze authentication, seeded demo users, and role support for admins, providers, buyers, and hybrid accounts.
 - Added provider and buyer profile management with service areas, profile details, and external profile snapshot records.
 - Added social posts, buyer job posts, provider quotes, quote revisions, quote decline flow, and buyer quote acceptance.
@@ -45,6 +46,7 @@ This project uses Git as the primary rollback trail. The `.old` convention is re
 - `php artisan test` passed under Windows PHP with 51 tests and 256 assertions after post-work provider tag verification.
 - `php artisan test` passed under Windows PHP with 55 tests and 285 assertions after Phase 11A mobile API and security hardening.
 - `php artisan test` passed under Windows PHP with 57 tests and 301 assertions after Phase 12A/13A notification preferences and admin governance.
+- `php artisan migrate:fresh --seed --env=testing`, `php artisan test` with 57 tests and 301 assertions, `npm run build`, and `bash scripts/health-check.sh` passed after Phase 14A deployment/scaling hardening.
 - `npm run build` passed with a production Vite build.
 - `https://christit.com/tse/login` loads publicly.
 - Seeded admin login succeeds on `https://christit.com/tse` and reaches `/tse/dashboard`.

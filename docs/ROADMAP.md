@@ -61,11 +61,11 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 
 ## Phase Checkpoint
 
-Phases 1-13A have been implemented locally through notification preferences, moderation reporting, and audit logging. The next active planning block is:
+Phases 1-14A have been implemented locally through deployment/scaling hardening. The next active planning block is:
 
-8. Deployment/scaling hardening.
-9. UX/accessibility polish.
-10. Future email/push delivery and native-app API expansion once providers are selected.
+1. UX/accessibility polish.
+2. Cached reputation aggregates after real slow pages are measured.
+3. Future email/push delivery and native-app API expansion once providers are selected.
 
 Work-order safeguards to carry into the next implementation passes:
 
@@ -157,6 +157,15 @@ Phase 12A/13A notification and admin governance completed:
 - Audit logs record selected operational and moderation events, including review moderation, imported-history verification, attachment deletion, work-order actions, quote acceptance, and mobile API actions.
 - Admins can review recent audit activity from the admin console.
 
+Phase 14A deployment/scaling hardening completed:
+
+- Added database indexes for job-board filters, profile filters, quotes, work-order timelines, reviews, ratings, disputes, attachments, imported-history queues, and notification inbox lookups.
+- Added `scripts/backup.sh` for SQLite, MySQL/MariaDB, and PostgreSQL database backups with optional `storage/app` archive support.
+- Added `scripts/health-check.sh` for deployment smoke checks.
+- Added optional `TSE_BACKUP_BEFORE_UPDATE=1` pre-update backups to `scripts/update.sh`.
+- Documented queue workers, scheduler, PHP-FPM expectations, Redis migration, backups, health checks, log rotation, storage scaling, and database scaling.
+- Kept cached reputation aggregates deferred until real traffic shows which pages need them.
+
 Available-work safeguards to carry into directory and job-list phases:
 
 - Available jobs should expose pay type, provider terms, schedule type, work type, rough location, buyer reliability, support/contact certification, scope clarity status, and request/quote count.
@@ -181,7 +190,7 @@ The reconciled forward plan from the current codebase is captured in `docs/FORWA
 - Work-order timelines, dispute activity, messages, and notification tables need careful indexes before large production use.
 - Realtime chat, websocket presence, mobile push, and geolocation check-ins should be added as deliberate service layers instead of bolted onto normal page requests.
 - Background imports, image processing, moderation summaries, and reputation recalculation should run through queue workers rather than web requests.
-- Production deployments need explicit PHP-FPM pool, Nginx, scheduler, queue worker, backup, and log rotation documentation.
+- Production deployments now have explicit PHP-FPM, Nginx, scheduler, queue worker, backup, health-check, and log rotation documentation. These should be revisited after real traffic establishes memory, queue, and slow-query patterns.
 
 ## Future/Deferred
 

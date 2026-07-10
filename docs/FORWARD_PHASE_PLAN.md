@@ -30,17 +30,17 @@ The goal is not to clone Field Nation. The goal is to keep the useful operationa
 ### Current Weak Spots In Code
 
 - Job posting now has structured scope and support certification fields, but the creation UI should be refined into reusable templates and stronger validation before real marketplace use.
-- Provider and buyer directories use text-based filters instead of normalized category, skill, coverage, remote, rating, and reliability filters.
-- Work-order lists are card-based and lack the dense assigned/available-work table that worked well in Field Nation.
-- Work-order detail now supports contact/support failure logging, first-class change requests, and post-work provider tag verification; schedule update requests, running-late records, and general report-problem records still need dedicated workflows.
+- Provider and buyer directories have better filters than the prototype baseline, but still need saved searches, stronger availability signals, and deeper reliability filters.
+- Work-order lists still need a UX pass for dense assigned-work tables and mobile-safe responsive alternatives.
+- Work-order detail now supports contact/support failure logging, first-class change requests, post-work provider tag verification, running-late records, and schedule-update requests; the remaining need is a cleaner general report-problem workflow.
 - Disputes and votes now have reason codes, but quorum rules, visibility rules, and deeper evidence timelines still need a future pass.
-- Reviews exist, but there is no review response, report flow, edit window, moderation queue, category definitions page, or imported/native reputation distinction in the UI.
-- Universal ratings are flexible, but category names are arbitrary strings and not governed by a taxonomy.
-- External profile imports store summary numbers and notes, but not structured work-category history, imported endorsement categories, imported review snapshots with privacy controls, or imported-vs-native display rules.
+- Reviews now have category definitions, reviewee responses, report flow, edit windows, moderation queues, and imported/native reputation separation; the remaining reputation work is mostly aggregate performance and UI polish.
+- Universal ratings are flexible, but category names still need stronger governance where they are not backed by explicit review categories.
+- External profile imports now support structured work-category history, imported endorsements, imported review excerpts, visibility controls, proof attachments, and verification status; the remaining risk is better privacy copy and verification workflow polish.
 - Profile services, tools, certifications, hiring policies, and locations are JSON arrays entered through newline text boxes. That is acceptable for prototype speed, but not durable enough for serious filtering.
-- Notification preferences exist as a model, but the UI does not expose channel and event preferences yet.
-- API endpoints are read-heavy starters and do not yet map to mobile-safe work-order actions.
-- Admin is only a status overview, not a moderation or operations console.
+- Notification preferences now expose channel intent, categories, event gates, digest, and quiet hours, but email/push delivery providers are intentionally not enabled yet.
+- API endpoints now cover mobile-safe work-order actions, but native app payloads should be refined once real app requirements are clearer.
+- Admin now includes moderation reports and audit logs, but still needs deeper operational filters, safety actions, and queue/system health panels.
 
 ## Revised Phases From Here
 
@@ -715,6 +715,16 @@ Provider-protection rules:
 - Private attachments must stay private.
 - Update/deployment failures should not corrupt active work orders.
 
+Implementation status:
+
+- Completed first implementation pass.
+- Added high-use database indexes for job filters, profile filters, quotes, work-order status/timelines, messages, ratings, reviews, disputes, attachments, imported-history queues, and notification inbox lookups.
+- Added `scripts/backup.sh` for SQLite, MySQL/MariaDB, and PostgreSQL backups with optional `storage/app` archive support.
+- Added `scripts/health-check.sh` for deployment smoke checks.
+- Added optional `TSE_BACKUP_BEFORE_UPDATE=1` pre-update backup support to `scripts/update.sh`.
+- Expanded deployment docs for queue workers, scheduler, PHP-FPM pool expectations, Redis migration, backup/export workflow, health checks, log rotation, storage scaling, and database scaling.
+- Deferred cached rating/reputation aggregates until real usage identifies slow pages and expensive queries.
+
 ## Phase 15 - UX Polish And Accessibility Pass
 
 Purpose:
@@ -751,8 +761,8 @@ Provider-protection rules:
 
 ## Recommended Immediate Sequence
 
-1. Phase 14A: deployment/scaling hardening.
-2. Phase 15A: UX polish and accessibility pass.
+1. Phase 15A: UX polish and accessibility pass.
+2. Cached rating/reputation aggregates after slow pages are measured.
 3. Future mobile/API expansion after native app requirements are clearer.
 4. Future email/push delivery implementation after the sender and push providers are explicitly selected.
 
