@@ -18,11 +18,14 @@ This project uses Git as the primary rollback trail. The `.old` convention is re
 - Added search/filter forms for provider, buyer, and job directories.
 - Added MIT license and first-pass open-source/platform guardrails.
 - Added deployment documentation covering runtime requirements, ChristIT `/tse` deployment assumptions, and remote change tracking.
+- Added optional route base-path config and a checked-in Nginx helper for the ChristIT `/tse` Laravel deployment.
 
 ### Verified
 
 - `php artisan test` passed with 35 tests and 116 assertions.
 - `npm run build` passed with a production Vite build.
+- `https://christit.com/tse/login` loads publicly.
+- Seeded admin login succeeds on `https://christit.com/tse` and reaches `/tse/dashboard`.
 
 ### Notes
 

@@ -57,7 +57,8 @@ Chosen deployment shape:
 Initial test data/runtime:
 
 - SQLite database at `/sites/provider-exchange/database/database.sqlite`.
-- `APP_URL=https://christit.com/tse`.
+- `APP_URL=https://christit.com`.
+- `APP_BASE_PATH=` for the current Nginx setup, because Nginx passes `SCRIPT_NAME=/tse/index.php` and Laravel derives the request base from that.
 - `ASSET_URL=https://christit.com/tse`.
 - `SESSION_PATH=/tse`.
 - `SESSION_DRIVER=database`.
@@ -76,6 +77,17 @@ Initial test data/runtime:
 - Uploaded app source to `/home/jbird/provider-exchange-release`.
 - Installed app source into `/sites/provider-exchange`.
 - Remote Composer was not available in noninteractive SSH; uploaded the local `vendor/` tree for this temporary test deployment.
-- No Nginx changes have been applied yet in this deployment pass.
+- Installed `php8.5-sqlite3` so the isolated SQLite test database can run under the existing PHP 8.5 runtime.
+- Added a narrow `/tse` Nginx block to `/etc/nginx/sites-available/christit.com`.
+- Nginx backups created by the helper include:
+  - `/etc/nginx/sites-available/christit.com.provider-exchange-tse-20260710-115810.bak`
+  - `/etc/nginx/sites-available/christit.com.provider-exchange-tse-20260710-120003.bak`
+  - `/etc/nginx/sites-available/christit.com.provider-exchange-tse-20260710-120209.bak`
+  - `/etc/nginx/sites-available/christit.com.provider-exchange-tse-20260710-121044.bak`
+  - `/etc/nginx/sites-available/christit.com.provider-exchange-tse-20260710-121151.bak`
+- Confirmed `nginx -t` passes after the `/tse` block was applied.
+- Confirmed `https://christit.com/tse/` redirects to `https://christit.com/tse/jobs`.
+- Confirmed `https://christit.com/tse/login` loads with a single-prefix form action.
+- Confirmed seeded admin login succeeds and redirects to `https://christit.com/tse/dashboard`.
 - No PHP-FPM version changes have been made.
 - No database server changes have been made.

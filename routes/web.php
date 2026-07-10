@@ -19,6 +19,9 @@ use App\Http\Controllers\WorkOrderMessageController;
 use App\Http\Controllers\WorkOrderController;
 use Illuminate\Support\Facades\Route;
 
+$basePath = trim((string) config('app.base_path', ''), '/');
+
+Route::prefix($basePath)->group(function (): void {
 Route::get('/', function () {
     return view('welcome');
 });
@@ -80,3 +83,4 @@ Route::get('/jobs', [JobPostController::class, 'index'])->name('jobs.index');
 Route::get('/jobs/{job}', [JobPostController::class, 'show'])->name('jobs.show');
 
 require __DIR__.'/auth.php';
+});
