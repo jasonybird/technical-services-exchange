@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('quotes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('job_post_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('provider_id')->constrained('users')->cascadeOnDelete();
+            $table->string('status')->default('submitted');
+            $table->decimal('requested_amount', 10, 2)->nullable();
+            $table->string('rate_summary')->nullable();
+            $table->text('message')->nullable();
+            $table->text('terms')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('quotes');
+    }
+};

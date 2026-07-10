@@ -1,6 +1,15 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\BuyerProfileController;
+use App\Http\Controllers\DisputeController;
+use App\Http\Controllers\ExternalProfileImportController;
+use App\Http\Controllers\JobPostController;
+use App\Http\Controllers\ProviderProfileController;
+use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SocialPostController;
+use App\Http\Controllers\WorkOrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -15,6 +24,35 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/provider-profile', [ProviderProfileController::class, 'edit'])->name('providers.edit');
+    Route::put('/provider-profile', [ProviderProfileController::class, 'update'])->name('providers.update');
+    Route::post('/provider-profile/imports', [ExternalProfileImportController::class, 'store'])->name('provider-imports.store');
+
+    Route::get('/buyer-profile', [BuyerProfileController::class, 'edit'])->name('buyers.edit');
+    Route::put('/buyer-profile', [BuyerProfileController::class, 'update'])->name('buyers.update');
+
+    Route::post('/feed', [SocialPostController::class, 'store'])->name('feed.store');
+
+    Route::get('/jobs/create', [JobPostController::class, 'create'])->name('jobs.create');
+    Route::post('/jobs', [JobPostController::class, 'store'])->name('jobs.store');
+    Route::post('/jobs/{job}/quotes', [QuoteController::class, 'store'])->name('quotes.store');
+    Route::post('/quotes/{quote}/accept', [QuoteController::class, 'accept'])->name('quotes.accept');
+
+    Route::get('/work-orders', [WorkOrderController::class, 'index'])->name('work-orders.index');
+    Route::get('/work-orders/{workOrder}', [WorkOrderController::class, 'show'])->name('work-orders.show');
+    Route::patch('/work-orders/{workOrder}/transition', [WorkOrderController::class, 'transition'])->name('work-orders.transition');
+    Route::post('/work-orders/{workOrder}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::post('/work-orders/{workOrder}/disputes', [DisputeController::class, 'store'])->name('disputes.store');
+    Route::get('/disputes/{dispute}', [DisputeController::class, 'show'])->name('disputes.show');
 });
+
+Route::get('/providers', [ProviderProfileController::class, 'index'])->name('providers.index');
+Route::get('/providers/{provider}', [ProviderProfileController::class, 'show'])->name('providers.show');
+Route::get('/buyers', [BuyerProfileController::class, 'index'])->name('buyers.index');
+Route::get('/buyers/{buyer}', [BuyerProfileController::class, 'show'])->name('buyers.show');
+Route::get('/feed', [SocialPostController::class, 'index'])->name('feed.index');
+Route::get('/jobs', [JobPostController::class, 'index'])->name('jobs.index');
+Route::get('/jobs/{job}', [JobPostController::class, 'show'])->name('jobs.show');
 
 require __DIR__.'/auth.php';
