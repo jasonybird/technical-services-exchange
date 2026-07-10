@@ -2,6 +2,8 @@
 
 Provider Exchange is an early Laravel prototype for a provider-centered field service network and work-order exchange.
 
+The code is intended to be open source under the MIT License.
+
 The product goal is not to clone Field Nation. The first version focuses on:
 
 - provider and buyer profiles;

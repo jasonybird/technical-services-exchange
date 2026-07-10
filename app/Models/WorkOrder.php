@@ -85,6 +85,11 @@ class WorkOrder extends Model
         return $this->morphMany(Attachment::class, 'attachable');
     }
 
+    public function ratings(): MorphMany
+    {
+        return $this->morphMany(Rating::class, 'rateable');
+    }
+
     public function canTransitionTo(string $status): bool
     {
         return in_array($status, self::ALLOWED_TRANSITIONS[$this->status] ?? [], true);

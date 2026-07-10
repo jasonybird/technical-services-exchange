@@ -7,6 +7,8 @@
             <h3 class="mt-6 font-semibold">Deliverables</h3>
             <p class="mt-2 whitespace-pre-line">{{ $workOrder->deliverables_checklist }}</p>
             <x-attachments :attachments="$workOrder->attachments" />
+            <x-rating-summary :ratings="$workOrder->ratings" />
+            <x-rating-form type="work_order" :id="$workOrder->id" category="work_order_outcome" mode="thumbs" />
             <x-attachment-form type="work_order" :id="$workOrder->id" kind="work_order" />
             <form method="POST" action="{{ route('work-orders.transition', $workOrder) }}" class="mt-6 space-y-4">
                 @csrf @method('PATCH')

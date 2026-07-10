@@ -11,6 +11,8 @@
                 <div><dt class="text-sm text-gray-500">Payment terms</dt><dd class="whitespace-pre-line">{{ $job->payment_terms }}</dd></div>
             </dl>
             <x-attachments :attachments="$job->attachments" />
+            <x-rating-summary :ratings="$job->ratings" />
+            <x-rating-form type="job_post" :id="$job->id" category="job_quality" />
             @auth
                 @if (auth()->id() === $job->buyer_id)
                     <x-attachment-form type="job_post" :id="$job->id" kind="job" />

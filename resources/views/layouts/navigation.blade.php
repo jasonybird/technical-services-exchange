@@ -30,6 +30,14 @@
                     <x-nav-link :href="route('work-orders.index')" :active="request()->routeIs('work-orders.*')">
                         {{ __('Work Orders') }}
                     </x-nav-link>
+                    @auth
+                        <x-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')">
+                            {{ __('Notifications') }}
+                            @if (auth()->user()->unreadNotifications()->count())
+                                ({{ auth()->user()->unreadNotifications()->count() }})
+                            @endif
+                        </x-nav-link>
+                    @endauth
                     @role('admin')
                         <x-nav-link :href="route('admin.index')" :active="request()->routeIs('admin.*')">
                             {{ __('Admin') }}
@@ -122,6 +130,11 @@
             <x-responsive-nav-link :href="route('work-orders.index')" :active="request()->routeIs('work-orders.*')">
                 {{ __('Work Orders') }}
             </x-responsive-nav-link>
+            @auth
+                <x-responsive-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')">
+                    {{ __('Notifications') }}
+                </x-responsive-nav-link>
+            @endauth
             @auth
                 @role('admin')
                     <x-responsive-nav-link :href="route('admin.index')" :active="request()->routeIs('admin.*')">

@@ -13,7 +13,7 @@ class DisputeController extends Controller
 {
     public function show(Request $request, Dispute $dispute): View
     {
-        $dispute->load('workOrder.buyer', 'workOrder.provider', 'openedBy', 'votes.user', 'comments.user', 'attachments');
+        $dispute->load('workOrder.buyer', 'workOrder.provider', 'openedBy', 'votes.user', 'comments.user', 'attachments', 'ratings.user');
 
         abort_unless(
             in_array($request->user()->id, [$dispute->workOrder->buyer_id, $dispute->workOrder->provider_id], true)

@@ -9,8 +9,10 @@ use App\Http\Controllers\DisputeController;
 use App\Http\Controllers\DisputeVoteController;
 use App\Http\Controllers\ExternalProfileImportController;
 use App\Http\Controllers\JobPostController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProviderProfileController;
 use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SocialPostController;
 use App\Http\Controllers\WorkOrderMessageController;
@@ -20,6 +22,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/terms', function () {
+    return view('terms');
+})->name('terms');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -40,6 +46,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/feed', [SocialPostController::class, 'store'])->name('feed.store');
     Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
     Route::post('/attachments', [AttachmentController::class, 'store'])->name('attachments.store');
+    Route::post('/ratings', [RatingController::class, 'store'])->name('ratings.store');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
 
     Route::get('/jobs/create', [JobPostController::class, 'create'])->name('jobs.create');
     Route::post('/jobs', [JobPostController::class, 'store'])->name('jobs.store');

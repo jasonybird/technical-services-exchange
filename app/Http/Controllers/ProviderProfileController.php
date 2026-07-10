@@ -9,10 +9,21 @@ use Illuminate\View\View;
 
 class ProviderProfileController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $profiles = ProviderProfile::with('user', 'externalImports', 'attachments', 'ratings.user');
+
+        if ($search = $request->string('q')->toString()) {
+            $profiles->where(fn ($query) => $query
+                ->where('business_name', 'like', "%{$search}%")
+                ->orWhere('headline', 'like', "%{$search}%")
+                ->orWhere('service_area', 'like', "%{$search}%")
+                ->orWhere('skills', 'like', "%{$search}%")
+            );
+        }
+
         return view('providers.index', [
-            'profiles' => ProviderProfile::with('user', 'externalImports', 'attachments')->latest()->paginate(20),
+            'profiles' => $profiles->latest()->paginate(20)->withQueryString(),
         ]);
     }
 
@@ -59,7 +70,7 @@ class ProviderProfileController extends Controller
     public function show(ProviderProfile $provider): View
     {
         return view('providers.show', [
-            'profile' => $provider->load('user', 'externalImports.attachments', 'attachments'),
+            'profile' => $provider->load('user', 'externalImports.attachments', 'attachments', 'ratings.user'),
         ]);
     }
 }

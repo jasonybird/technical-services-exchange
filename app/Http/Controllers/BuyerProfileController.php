@@ -9,10 +9,21 @@ use Illuminate\View\View;
 
 class BuyerProfileController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $profiles = BuyerProfile::with('user', 'attachments', 'ratings.user');
+
+        if ($search = $request->string('q')->toString()) {
+            $profiles->where(fn ($query) => $query
+                ->where('company_name', 'like', "%{$search}%")
+                ->orWhere('headline', 'like', "%{$search}%")
+                ->orWhere('service_categories', 'like', "%{$search}%")
+                ->orWhere('hiring_regions', 'like', "%{$search}%")
+            );
+        }
+
         return view('buyers.index', [
-            'profiles' => BuyerProfile::with('user', 'attachments')->latest()->paginate(20),
+            'profiles' => $profiles->latest()->paginate(20)->withQueryString(),
         ]);
     }
 
@@ -55,7 +66,7 @@ class BuyerProfileController extends Controller
     public function show(BuyerProfile $buyer): View
     {
         return view('buyers.show', [
-            'profile' => $buyer->load('user', 'attachments'),
+            'profile' => $buyer->load('user', 'attachments', 'ratings.user'),
         ]);
     }
 }

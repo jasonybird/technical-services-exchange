@@ -11,9 +11,24 @@
             <x-attachment-form type="dispute" :id="$dispute->id" kind="evidence" />
             <h3 class="mt-4 font-semibold">Recommended resolution</h3>
             <p class="mt-2 whitespace-pre-line">{{ $dispute->recommended_resolution ?? 'Pending peer review.' }}</p>
+            <x-rating-summary :ratings="$dispute->ratings" />
+            <x-rating-form type="dispute" :id="$dispute->id" category="resolution_fairness" mode="thumbs" />
         </section>
         <section class="rounded border bg-white p-6">
             <h3 class="font-semibold">Peer votes</h3>
+            @php
+                $voteGroups = $dispute->votes->groupBy('recommendation')->map->count();
+                $voteTotal = max($dispute->votes->count(), 1);
+            @endphp
+            <div class="mt-3 grid gap-3 md:grid-cols-4">
+                @foreach (['provider' => 'Provider', 'buyer' => 'Buyer', 'split' => 'Split', 'insufficient_evidence' => 'Insufficient evidence'] as $key => $label)
+                    @php $count = $voteGroups[$key] ?? 0; @endphp
+                    <div class="rounded border bg-gray-50 p-3 text-sm">
+                        <p class="font-semibold">{{ $label }}</p>
+                        <p>{{ $count }} vote{{ $count === 1 ? '' : 's' }} | {{ round(($count / $voteTotal) * 100) }}%</p>
+                    </div>
+                @endforeach
+            </div>
             <form method="POST" action="{{ route('dispute-votes.store', $dispute) }}" class="mt-4 space-y-4">
                 @csrf
                 <label class="block text-sm font-medium">Recommendation</label>

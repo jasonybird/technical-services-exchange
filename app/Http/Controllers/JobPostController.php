@@ -9,10 +9,25 @@ use Illuminate\View\View;
 
 class JobPostController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $jobs = JobPost::with('buyer.buyerProfile', 'attachments', 'ratings.user');
+
+        if ($search = $request->string('q')->toString()) {
+            $jobs->where(fn ($query) => $query
+                ->where('title', 'like', "%{$search}%")
+                ->orWhere('service_category', 'like', "%{$search}%")
+                ->orWhere('location', 'like', "%{$search}%")
+                ->orWhere('scope', 'like', "%{$search}%")
+            );
+        }
+
+        if ($status = $request->string('status')->toString()) {
+            $jobs->where('status', $status);
+        }
+
         return view('jobs.index', [
-            'jobs' => JobPost::with('buyer.buyerProfile', 'attachments')->latest()->paginate(20),
+            'jobs' => $jobs->latest()->paginate(20)->withQueryString(),
         ]);
     }
 
@@ -56,7 +71,8 @@ class JobPostController extends Controller
                 'quotes.revisions.user',
                 'workOrder',
                 'attachments',
-                'comments.user'
+                'comments.user',
+                'ratings.user'
             ),
         ]);
     }

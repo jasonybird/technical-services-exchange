@@ -12,7 +12,7 @@ class WorkOrderController extends Controller
 {
     public function index(Request $request): View
     {
-        $orders = WorkOrder::with('jobPost', 'buyer.buyerProfile', 'provider.providerProfile')
+        $orders = WorkOrder::with('jobPost', 'buyer.buyerProfile', 'provider.providerProfile', 'ratings.user')
             ->where(fn ($query) => $query
                 ->where('buyer_id', $request->user()->id)
                 ->orWhere('provider_id', $request->user()->id)
@@ -38,6 +38,7 @@ class WorkOrderController extends Controller
                 'disputes.openedBy',
                 'messages.user',
                 'attachments',
+                'ratings.user',
             ),
         ]);
     }

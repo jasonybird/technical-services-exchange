@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\JobPost;
+use App\Models\ProviderProfile;
 use App\Models\SocialPost;
 use App\Models\User;
 use App\Models\WorkOrder;
+use App\Notifications\ExchangeEventNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -166,6 +168,52 @@ class ExchangeWorkflowTest extends TestCase
         $this->assertDatabaseHas('work_order_messages', ['body' => 'Please upload completion photos.']);
         $this->assertDatabaseHas('attachments', ['caption' => 'Completion photo']);
         $this->assertDatabaseHas('dispute_votes', ['recommendation' => 'split']);
+    }
+
+    public function test_everything_rating_layer_accepts_profile_and_work_order_ratings(): void
+    {
+        [$buyer, $provider, $workOrder] = $this->workOrderFixture();
+        $profile = ProviderProfile::create([
+            'user_id' => $provider->id,
+            'business_name' => 'Rated Provider',
+        ]);
+
+        $this->actingAs($buyer)->post('/ratings', [
+            'rateable_type' => 'provider_profile',
+            'rateable_id' => $profile->id,
+            'category' => 'provider_overall',
+            'stars' => 5,
+            'body' => 'Reliable provider.',
+        ])->assertRedirect();
+
+        $this->actingAs($provider)->post('/ratings', [
+            'rateable_type' => 'work_order',
+            'rateable_id' => $workOrder->id,
+            'category' => 'work_order_outcome',
+            'thumbs_up' => 1,
+            'body' => 'Good job outcome.',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('ratings', ['category' => 'provider_overall', 'stars' => 5]);
+        $this->assertDatabaseHas('ratings', ['category' => 'work_order_outcome', 'thumbs_up' => true]);
+    }
+
+    public function test_notification_inbox_lists_and_marks_notifications_read(): void
+    {
+        $user = $this->userWithRole('provider');
+
+        $user->notify(new ExchangeEventNotification('Test notice', 'Body text', '/jobs', 'test'));
+
+        $notification = $user->notifications()->firstOrFail();
+
+        $this->actingAs($user)->get('/notifications')
+            ->assertOk()
+            ->assertSee('Test notice');
+
+        $this->actingAs($user)->post("/notifications/{$notification->id}/read")
+            ->assertRedirect();
+
+        $this->assertNotNull($notification->fresh()->read_at);
     }
 
     private function userWithRole(string $role): User

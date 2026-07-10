@@ -10,5 +10,7 @@
             <div><dt class="text-sm text-gray-500">Payment terms</dt><dd class="whitespace-pre-line">{{ $profile->payment_terms }}</dd></div>
         </dl>
         <x-attachments :attachments="$profile->attachments" />
+        <x-rating-summary :ratings="$profile->ratings" />
+        <x-rating-form type="buyer_profile" :id="$profile->id" category="buyer_overall" />
     </div>
 </x-app-layout>

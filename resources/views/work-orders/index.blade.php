@@ -5,6 +5,7 @@
             <a href="{{ route('work-orders.show', $order) }}" class="block rounded border bg-white p-4 shadow-sm">
                 <h3 class="font-semibold">{{ $order->jobPost->title }}</h3>
                 <p class="text-sm text-gray-600">{{ $order->status }} | Buyer: {{ $order->buyer->name }} | Provider: {{ $order->provider->name }}</p>
+                <x-rating-summary :ratings="$order->ratings" />
             </a>
         @endforeach
         {{ $orders->links() }}

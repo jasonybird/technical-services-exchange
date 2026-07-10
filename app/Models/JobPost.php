@@ -47,4 +47,9 @@ class JobPost extends Model
     {
         return $this->morphMany(Attachment::class, 'attachable');
     }
+
+    public function ratings(): MorphMany
+    {
+        return $this->morphMany(Rating::class, 'rateable');
+    }
 }
