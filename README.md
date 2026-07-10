@@ -47,6 +47,10 @@ npm run build
 php artisan serve --host=0.0.0.0 --port=8123
 ```
 
+## Server Install
+
+See `docs/INSTALL.md` for the first-pass Ubuntu/Nginx installer and update script.
+
 ## Demo Accounts
 
 All seeded demo accounts use password `password`.

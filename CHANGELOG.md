@@ -19,6 +19,7 @@ This project uses Git as the primary rollback trail. The `.old` convention is re
 - Added MIT license and first-pass open-source/platform guardrails.
 - Added deployment documentation covering runtime requirements, ChristIT `/tse` deployment assumptions, and remote change tracking.
 - Added optional route base-path config and a checked-in Nginx helper for the ChristIT `/tse` Laravel deployment.
+- Added first-pass Ubuntu install and update scripts for GitHub-based deployments.
 
 ### Verified
 
