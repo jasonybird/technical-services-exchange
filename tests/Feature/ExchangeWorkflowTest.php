@@ -525,6 +525,93 @@ class ExchangeWorkflowTest extends TestCase
             ->assertSee('Field troubleshooter');
     }
 
+    public function test_buyer_can_verify_provider_tags_after_completed_work(): void
+    {
+        [$buyer, $provider, $workOrder] = $this->workOrderFixture();
+        $workOrder->update(['status' => 'completed']);
+
+        $toolTag = TaxonomyTerm::create([
+            'type' => 'tool',
+            'name' => 'Cable tester',
+            'slug' => 'buyer-endorsed-cable-tester',
+        ]);
+        $skillTag = TaxonomyTerm::create([
+            'type' => 'skill',
+            'name' => 'Field troubleshooter',
+            'slug' => 'buyer-endorsed-field-troubleshooter',
+        ]);
+        $profile = $provider->providerProfile()->create([
+            'business_name' => 'Verified Provider',
+            'max_technician_level' => 3,
+            'profile_visibility' => ['imports' => true],
+        ]);
+        $profile->taxonomyTerms()->sync([
+            $toolTag->id => ['evidence_source' => 'self_declared'],
+            $skillTag->id => ['evidence_source' => 'self_declared'],
+        ]);
+
+        $this->actingAs($buyer)->post("/work-orders/{$workOrder->id}/provider-tag-verification", [
+            'level_verdict' => 'confirmed',
+            'confirmed_level' => 3,
+            'confirmed_term_ids' => [$toolTag->id],
+            'disputed_term_ids' => [$skillTag->id],
+            'suggested_tags_text' => "Well-prepared\nRetail POS",
+            'notes' => 'Provider arrived with the right test gear and solved the issue.',
+        ])->assertRedirect("/work-orders/{$workOrder->id}");
+
+        $this->assertDatabaseHas('provider_tag_verifications', [
+            'work_order_id' => $workOrder->id,
+            'provider_profile_id' => $profile->id,
+            'level_verdict' => 'confirmed',
+            'confirmed_level' => 3,
+            'notes' => 'Provider arrived with the right test gear and solved the issue.',
+        ]);
+        $this->assertDatabaseHas('provider_profile_taxonomy_term', [
+            'provider_profile_id' => $profile->id,
+            'taxonomy_term_id' => $toolTag->id,
+            'evidence_source' => 'buyer_endorsed',
+        ]);
+        $this->assertDatabaseHas('provider_profile_taxonomy_term', [
+            'provider_profile_id' => $profile->id,
+            'taxonomy_term_id' => $skillTag->id,
+            'evidence_source' => 'self_declared',
+        ]);
+
+        $this->actingAs($buyer)->get("/work-orders/{$workOrder->id}")
+            ->assertOk()
+            ->assertSee('Provider tag verification')
+            ->assertSee('Cable tester')
+            ->assertSee('Well-prepared');
+
+        $this->get("/providers/{$profile->id}")
+            ->assertOk()
+            ->assertSee('Completed-work competency evidence')
+            ->assertSee('Cable tester')
+            ->assertSee('Retail POS')
+            ->assertSee('buyer endorsed');
+    }
+
+    public function test_provider_tag_verification_rejects_provider_and_uncompleted_work(): void
+    {
+        [$buyer, $provider, $workOrder] = $this->workOrderFixture();
+        $provider->providerProfile()->create([
+            'business_name' => 'Unready Provider',
+            'max_technician_level' => 2,
+        ]);
+
+        $this->actingAs($provider)->post("/work-orders/{$workOrder->id}/provider-tag-verification", [
+            'level_verdict' => 'confirmed',
+            'confirmed_level' => 2,
+        ])->assertForbidden();
+
+        $this->actingAs($buyer)->post("/work-orders/{$workOrder->id}/provider-tag-verification", [
+            'level_verdict' => 'confirmed',
+            'confirmed_level' => 2,
+        ])->assertStatus(422);
+
+        $this->assertDatabaseCount('provider_tag_verifications', 0);
+    }
+
     public function test_buyer_directory_can_filter_and_sort_profiles(): void
     {
         $retailBuyer = $this->userWithRole('buyer');

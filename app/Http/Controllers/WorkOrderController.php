@@ -34,10 +34,11 @@ class WorkOrderController extends Controller
             'workOrder' => $workOrder->load(
                 'jobPost',
                 'buyer.buyerProfile',
-                'provider.providerProfile',
+                'provider.providerProfile.taxonomyTerms',
                 'acceptedQuote',
                 'structuredChangeRequests.requester',
                 'contactEvents.user',
+                'providerTagVerification.buyer',
                 'reviews.reviewer',
                 'reviews.reviewee',
                 'disputes.openedBy',

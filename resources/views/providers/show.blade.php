@@ -91,6 +91,53 @@
             <x-rating-form type="provider_profile" :id="$profile->id" category="provider_overall" />
         </section>
 
+        <section class="tse-panel p-6">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <h3 class="font-semibold text-slate-950 dark:text-white">Completed-work competency evidence</h3>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Buyer confirmations from completed TSE work orders. These support profile tags without replacing provider-controlled profile claims.</p>
+                </div>
+                <x-badge tone="sky">{{ $profile->tagVerifications->count() }} records</x-badge>
+            </div>
+
+            @forelse ($profile->tagVerifications->sortByDesc('created_at')->take(6) as $verification)
+                @php
+                    $confirmedTerms = $profile->taxonomyTerms->whereIn('id', $verification->confirmed_term_ids ?? []);
+                    $confirmedLevel = $verification->confirmedLevelDefinition();
+                @endphp
+                <div class="mt-4 rounded-md border border-slate-200 p-4 text-sm dark:border-slate-800">
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <p class="font-semibold text-slate-950 dark:text-white">{{ $verification->workOrder->jobPost->title ?? 'Completed work order' }}</p>
+                            <p class="mt-1 text-slate-600 dark:text-slate-400">{{ $verification->buyer->name }} | {{ str_replace('_', ' ', $verification->level_verdict) }} | {{ $verification->created_at->format('M j, Y') }}</p>
+                        </div>
+                        @if ($confirmedLevel)
+                            <x-badge tone="sky">{{ $confirmedLevel['short_name'] }}</x-badge>
+                        @endif
+                    </div>
+                    @if ($confirmedTerms->isNotEmpty())
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            @foreach ($confirmedTerms as $term)
+                                <x-badge tone="emerald">{{ $term->name }}</x-badge>
+                            @endforeach
+                        </div>
+                    @endif
+                    @if ($verification->suggested_tags)
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            @foreach ($verification->suggested_tags as $tag)
+                                <x-badge tone="slate">{{ $tag }}</x-badge>
+                            @endforeach
+                        </div>
+                    @endif
+                    @if ($verification->notes)
+                        <p class="mt-3 whitespace-pre-line text-slate-700 dark:text-slate-300">{{ $verification->notes }}</p>
+                    @endif
+                </div>
+            @empty
+                <p class="mt-3 text-sm text-slate-600 dark:text-slate-400">No completed-work competency confirmations have been recorded yet.</p>
+            @endforelse
+        </section>
+
         @if ($profile->visible('imports'))
             <section class="tse-panel p-6">
                 <h3 class="font-semibold text-slate-950 dark:text-white">Imported profile and review history</h3>

@@ -11,6 +11,7 @@ use App\Http\Controllers\ExternalProfileImportController;
 use App\Http\Controllers\JobPostController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProviderProfileController;
+use App\Http\Controllers\ProviderTagVerificationController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ReviewController;
@@ -87,6 +88,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/work-orders/{workOrder}/transition', [WorkOrderController::class, 'transition'])->name('work-orders.transition');
     Route::post('/work-orders/{workOrder}/messages', [WorkOrderMessageController::class, 'store'])->name('work-order-messages.store');
     Route::post('/work-orders/{workOrder}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::post('/work-orders/{workOrder}/provider-tag-verification', [ProviderTagVerificationController::class, 'store'])->name('provider-tag-verifications.store');
     Route::post('/reviews/{review}/response', [ReviewController::class, 'respond'])->name('reviews.respond');
     Route::post('/reviews/{review}/report', [ReviewController::class, 'report'])->name('reviews.report');
     Route::patch('/reviews/{review}/moderation', [ReviewController::class, 'moderate'])->name('reviews.moderate');

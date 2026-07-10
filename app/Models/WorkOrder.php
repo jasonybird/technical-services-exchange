@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Model;
 
@@ -109,6 +110,11 @@ class WorkOrder extends Model
     public function contactEvents(): HasMany
     {
         return $this->hasMany(WorkOrderContactEvent::class);
+    }
+
+    public function providerTagVerification(): HasOne
+    {
+        return $this->hasOne(ProviderTagVerification::class);
     }
 
     public function canTransitionTo(string $status): bool

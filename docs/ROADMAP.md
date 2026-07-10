@@ -20,6 +20,7 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 - Normalized starter taxonomy for work categories, specialties, skills, tools, certifications, and provider tag evidence sources.
 - Explicit technician level ladder from smart hands through project lead.
 - Guided imported-history records for Field Nation, WorkMarket, and similar platforms with privacy controls, selected review excerpts, metrics, proof attachments, and admin verification status.
+- Post-work provider tag verification for completed work orders, including buyer-confirmed level evidence, confirmed/disputed declared tags, suggested tags, and buyer-endorsed profile tag evidence.
 - Configurable attachment storage policy with upload root, disk, size cap, MIME allowlist, image previews, file metadata, and deletion.
 - Mutual reviews with category metrics.
 - Peer-review disputes with comments, evidence, structured recommendations, and public vote breakdowns.
@@ -57,11 +58,11 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 
 ## Phase Checkpoint
 
-Phases 1-10A have been implemented locally through the guided imported-history pass. The next active planning block is:
+Phases 1-10B have been implemented locally through post-work provider tag verification. The next active planning block is:
 
 8. API/mobile prep: token-scoped endpoints, versioned API resources, geolocation check-in groundwork, contact/support failure logging, and mobile-safe work-order actions.
-9. Post-work verification: buyer endorsement or disagreement with provider level/tags after completed work orders, earned evidence upgrades, and transparent tag history.
-10. Notification preference UI and event-channel controls.
+9. Notification preference UI and event-channel controls.
+10. Admin operations, audit logs, and deployment hardening.
 
 Work-order safeguards to carry into the next implementation passes:
 
@@ -124,6 +125,14 @@ Guided imported-history implementation completed:
 - Imported history keeps a separate verification status: unverified, provider attested, admin verified, or needs more proof.
 - Admin dashboard includes an imported-history verification queue.
 - Imported history remains separate from native TSE reputation.
+
+Post-work provider tag verification completed:
+
+- Buyers and admins can verify provider level/tag evidence after a work order is completed, buyer approved, or closed.
+- Verification records store the provider's declared level, the observed level, a level verdict, confirmed tags, disputed tags, buyer-suggested tags, and notes.
+- Confirmed declared tags upgrade their provider-profile evidence source to `buyer_endorsed`.
+- Provider profiles now show recent completed-work competency evidence separately from imported history and five-star reviews.
+- Providers cannot self-verify their tags from a work order.
 
 Available-work safeguards to carry into directory and job-list phases:
 

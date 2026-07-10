@@ -33,6 +33,7 @@ The goal is not to clone Field Nation. The goal is to keep the useful operationa
 - Provider and buyer directories use text-based filters instead of normalized category, skill, coverage, remote, rating, and reliability filters.
 - Work-order lists are card-based and lack the dense assigned/available-work table that worked well in Field Nation.
 - Work-order detail now supports contact/support failure logging and first-class change requests, but schedule update requests, running-late records, post-work tag verification, and general report-problem records still need a dedicated workflow.
+- Work-order detail now supports contact/support failure logging, first-class change requests, and post-work provider tag verification; schedule update requests, running-late records, and general report-problem records still need dedicated workflows.
 - Disputes and votes now have reason codes, but quorum rules, visibility rules, and deeper evidence timelines still need a future pass.
 - Reviews exist, but there is no review response, report flow, edit window, moderation queue, category definitions page, or imported/native reputation distinction in the UI.
 - Universal ratings are flexible, but category names are arbitrary strings and not governed by a taxonomy.
@@ -420,7 +421,7 @@ Implementation status:
 - Added provider maximum technician level and self-declared tags in profile editing.
 - Added buyer job technician-level selection and scope mismatch risk detection for smart-hands jobs that include troubleshooting or certification requirements.
 - Added provider directory filters for technician level and taxonomy tag.
-- Deferred buyer post-work tag endorsement/disagreement to the next verification pass.
+- Added buyer post-work tag endorsement/disagreement with buyer-endorsed evidence updates on provider profiles.
 
 ## Phase 10 - Import Tooling And Marketplace History
 
@@ -717,11 +718,10 @@ Provider-protection rules:
 
 ## Recommended Immediate Sequence
 
-1. Post-work provider tag verification: buyer endorsement/disagreement with self-declared level and tags after completed work orders.
-2. Phase 11A: mobile-safe API endpoints for onsite work-order actions.
-3. Phase 12A: notification preference UI and event-channel controls.
-4. Phase 13A: audit logs and moderation/operations queues.
-5. Phase 14A: deployment/scaling hardening.
+1. Phase 11A: mobile-safe API endpoints for onsite work-order actions.
+2. Phase 12A: notification preference UI and event-channel controls.
+3. Phase 13A: audit logs and moderation/operations queues.
+4. Phase 14A: deployment/scaling hardening.
 
 ## Key Design Commitments
 

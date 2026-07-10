@@ -19,6 +19,7 @@ This project uses Git as the primary rollback trail. The `.old` convention is re
 - Added Phase 6/7 scope and contact safeguards with structured job scope fields, scope clarity and risk badges, support/contact certification, work-order scope/contact snapshots, first-class change requests, contact/support event logging, reason-coded disputes, and print-packet support.
 - Added Phase 8/9 marketplace matching with a dense available-work board, category/level/safety filters, technician level definitions, normalized taxonomy terms, provider tag assignment, and self-declared evidence-source tracking.
 - Added the guided imported-history wizard with structured work categories, imported endorsements, operational metrics, selected review excerpts, public visibility controls, proof attachments, and admin verification status.
+- Added post-work provider tag verification so buyers can confirm/dispute observed technician level and declared provider tags after completed work orders, with buyer-endorsed tag evidence shown on provider profiles.
 - Created the Laravel Provider Exchange prototype with Breeze authentication, seeded demo users, and role support for admins, providers, buyers, and hybrid accounts.
 - Added provider and buyer profile management with service areas, profile details, and external profile snapshot records.
 - Added social posts, buyer job posts, provider quotes, quote revisions, quote decline flow, and buyer quote acceptance.
@@ -39,6 +40,7 @@ This project uses Git as the primary rollback trail. The `.old` convention is re
 - `php artisan test` passed under Windows PHP with 46 tests and 216 assertions after enabling `pdo_sqlite`, `sqlite3`, `fileinfo`, and `gd` in `C:\tools\php85\php.ini`.
 - `php artisan test` passed under Windows PHP with 48 tests and 228 assertions after Phase 8/9.
 - `php artisan test` passed under Windows PHP with 49 tests and 239 assertions after the guided imported-history wizard.
+- `php artisan test` passed under Windows PHP with 51 tests and 256 assertions after post-work provider tag verification.
 - `npm run build` passed with a production Vite build.
 - `https://christit.com/tse/login` loads publicly.
 - Seeded admin login succeeds on `https://christit.com/tse` and reaches `/tse/dashboard`.

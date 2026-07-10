@@ -6,6 +6,13 @@
     $changeReasonCodes = \App\Models\WorkOrderChangeRequest::REASON_CODES;
     $contactEventTypes = \App\Models\WorkOrderContactEvent::EVENT_TYPES;
     $disputeReasonCodes = \App\Models\Dispute::REASON_CODES;
+    $providerProfile = $workOrder->provider->providerProfile;
+    $providerTerms = $providerProfile?->taxonomyTerms ?? collect();
+    $tagVerification = $workOrder->providerTagVerification;
+    $verificationCompleteStatuses = ['completed', 'buyer_approved', 'closed'];
+    $canVerifyProviderTags = (auth()->id() === $workOrder->buyer_id || auth()->user()->hasRole('admin'))
+        && in_array($workOrder->status, $verificationCompleteStatuses, true)
+        && $providerProfile;
 @endphp
 
 <x-app-layout>
@@ -414,6 +421,132 @@
                     @endif
                 </div>
             @endforeach
+        </section>
+
+        <section class="tse-panel p-6">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <h3 class="font-semibold text-slate-950 dark:text-white">Provider tag verification</h3>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">After completed work, buyers can confirm whether the provider level and self-declared tags matched what was observed on this job.</p>
+                </div>
+                @if ($tagVerification)
+                    <x-badge tone="emerald">Verification recorded</x-badge>
+                @else
+                    <x-badge tone="slate">No verification yet</x-badge>
+                @endif
+            </div>
+
+            @if ($tagVerification)
+                @php
+                    $confirmedTerms = $providerTerms->whereIn('id', $tagVerification->confirmed_term_ids ?? []);
+                    $disputedTerms = $providerTerms->whereIn('id', $tagVerification->disputed_term_ids ?? []);
+                    $confirmedLevel = $tagVerification->confirmedLevelDefinition();
+                @endphp
+                <div class="mt-4 rounded-md border border-slate-200 p-4 text-sm dark:border-slate-800">
+                    <p class="font-semibold text-slate-950 dark:text-white">
+                        {{ $tagVerification->buyer->name }} marked level evidence as {{ str_replace('_', ' ', $tagVerification->level_verdict) }}.
+                    </p>
+                    <p class="mt-1 text-slate-600 dark:text-slate-400">
+                        Declared: {{ config('technician-levels')[$tagVerification->declared_level]['short_name'] ?? 'Not recorded' }}
+                        @if ($confirmedLevel)
+                            | Observed: {{ $confirmedLevel['short_name'] }}
+                        @endif
+                    </p>
+                    @if ($confirmedTerms->isNotEmpty())
+                        <div class="mt-3">
+                            <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Confirmed tags</p>
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                @foreach ($confirmedTerms as $term)
+                                    <x-badge tone="emerald">{{ $term->name }}</x-badge>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                    @if ($disputedTerms->isNotEmpty())
+                        <div class="mt-3">
+                            <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Disputed tags</p>
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                @foreach ($disputedTerms as $term)
+                                    <x-badge tone="amber">{{ $term->name }}</x-badge>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                    @if ($tagVerification->suggested_tags)
+                        <div class="mt-3">
+                            <p class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Buyer suggested tags</p>
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                @foreach ($tagVerification->suggested_tags as $tag)
+                                    <x-badge tone="sky">{{ $tag }}</x-badge>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                    @if ($tagVerification->notes)
+                        <p class="mt-3 whitespace-pre-line text-slate-700 dark:text-slate-300">{{ $tagVerification->notes }}</p>
+                    @endif
+                </div>
+            @endif
+
+            @if ($canVerifyProviderTags)
+                <form method="POST" action="{{ route('provider-tag-verifications.store', $workOrder) }}" class="mt-4 space-y-4 rounded-md border border-slate-200 p-4 dark:border-slate-800">
+                    @csrf
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="level_verdict" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Level verdict</label>
+                            <select id="level_verdict" name="level_verdict" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                                @foreach (\App\Models\ProviderTagVerification::LEVEL_VERDICTS as $code => $label)
+                                    <option value="{{ $code }}" @selected(($tagVerification?->level_verdict ?? 'not_observed') === $code)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label for="confirmed_level" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Observed technician level</label>
+                            <select id="confirmed_level" name="confirmed_level" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                                <option value="">Not observed</option>
+                                @foreach (config('technician-levels') as $level => $definition)
+                                    <option value="{{ $level }}" @selected((int) ($tagVerification?->confirmed_level ?? 0) === $level)>{{ $definition['name'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Confirm observed tags</p>
+                            <div class="mt-2 space-y-2">
+                                @forelse ($providerTerms as $term)
+                                    <label class="flex items-start gap-2 rounded-md border border-slate-200 p-2 text-sm dark:border-slate-800">
+                                        <input type="checkbox" name="confirmed_term_ids[]" value="{{ $term->id }}" @checked(in_array($term->id, $tagVerification?->confirmed_term_ids ?? [], true)) class="mt-1 rounded border-slate-300 text-sky-600 shadow-sm focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950">
+                                        <span>{{ $term->name }} <span class="text-xs text-slate-500">({{ str_replace('_', ' ', $term->type) }})</span></span>
+                                    </label>
+                                @empty
+                                    <p class="text-sm text-slate-600 dark:text-slate-400">The provider has not declared tags yet.</p>
+                                @endforelse
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Dispute tags that did not match this job</p>
+                            <div class="mt-2 space-y-2">
+                                @forelse ($providerTerms as $term)
+                                    <label class="flex items-start gap-2 rounded-md border border-slate-200 p-2 text-sm dark:border-slate-800">
+                                        <input type="checkbox" name="disputed_term_ids[]" value="{{ $term->id }}" @checked(in_array($term->id, $tagVerification?->disputed_term_ids ?? [], true)) class="mt-1 rounded border-slate-300 text-amber-600 shadow-sm focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-950">
+                                        <span>{{ $term->name }} <span class="text-xs text-slate-500">({{ str_replace('_', ' ', $term->type) }})</span></span>
+                                    </label>
+                                @empty
+                                    <p class="text-sm text-slate-600 dark:text-slate-400">No tags are available to dispute.</p>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+
+                    <x-field name="suggested_tags_text" label="Suggested tags, one per line" :value="implode(PHP_EOL, $tagVerification?->suggested_tags ?? [])" textarea />
+                    <x-field name="notes" label="Notes about observed preparation, tools, or fit" :value="$tagVerification?->notes" textarea />
+                    <x-primary-button>Save provider tag verification</x-primary-button>
+                </form>
+            @elseif (! in_array($workOrder->status, $verificationCompleteStatuses, true))
+                <p class="mt-3 text-sm text-slate-600 dark:text-slate-400">Provider tag verification opens after the provider marks the work completed.</p>
+            @endif
         </section>
 
         <section class="tse-panel p-6">

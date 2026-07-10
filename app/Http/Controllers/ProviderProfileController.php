@@ -139,7 +139,15 @@ class ProviderProfileController extends Controller
     public function show(ProviderProfile $provider): View
     {
         return view('providers.show', [
-            'profile' => $provider->load('user', 'externalImports.attachments', 'taxonomyTerms', 'attachments', 'ratings.user'),
+            'profile' => $provider->load(
+                'user',
+                'externalImports.attachments',
+                'taxonomyTerms',
+                'attachments',
+                'ratings.user',
+                'tagVerifications.workOrder.jobPost',
+                'tagVerifications.buyer',
+            ),
         ]);
     }
 

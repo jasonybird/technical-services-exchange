@@ -56,6 +56,11 @@ class ProviderProfile extends Model
             ->withTimestamps();
     }
 
+    public function tagVerifications(): HasMany
+    {
+        return $this->hasMany(ProviderTagVerification::class);
+    }
+
     public function technicianLevel(): array
     {
         return config('technician-levels')[(int) $this->max_technician_level] ?? config('technician-levels')[1];
