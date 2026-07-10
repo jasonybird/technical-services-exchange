@@ -29,12 +29,13 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 - Payment remains direct between buyer and provider unless a compliant payment partner is deliberately added later.
 - Reputation should be mutual, transparent, and appealable through community review.
 - Dispute voting is a community reputation signal, not legal adjudication.
+- Runtime dependencies, UI components, and themes should stay open-source friendly. Avoid proprietary theme kits, unclear asset licenses, or dependencies that would restrict commercial, nonprofit, or community scaling.
 
 ## Next Build Phases
 
 1. Profile depth: richer galleries, equipment lists, certifications, insurance fields, service coverage maps, and imported review summaries.
 2. Directory quality: saved searches, better filtering, profile badges, availability signals, and stronger buyer/provider discovery pages.
-3. Work-order depth: checklist templates, required evidence rules, appointment windows, onsite timestamps, and change-request records.
+3. Work-order depth: checklist templates, required evidence rules, appointment windows, onsite timestamps, change-request records, and print/PDF export for work-order packets.
 4. Reputation refinement: rating category definitions, anti-abuse controls, edit windows, report flows, and moderation views.
 5. Dispute workflow: better evidence timelines, reason-coded votes, quorum/visibility rules, and admin/community moderation tools.
 6. Notifications: channel preferences, email templates, and event-specific subscription controls.
@@ -42,6 +43,7 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 8. Import tooling: guided manual imports for Field Nation, WorkMarket, and similar profile/review history.
 9. Admin operations: audit logs, queue health, system status, content moderation, and backup/export workflows.
 10. Deployment hardening: production environment docs, queue worker setup, scheduler setup, storage policy, and server provisioning notes.
+11. License and runtime audit: generate and review PHP and JavaScript dependency license reports before adding external theme kits, map any risky package to a replacement, and keep required local/runtime extensions such as `pdo_sqlite` documented for testability.
 
 ## Scaling Risks To Track
 

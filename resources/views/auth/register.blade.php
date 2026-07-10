@@ -18,7 +18,7 @@
 
         <div class="mt-4">
             <x-input-label for="account_type" :value="__('Account type')" />
-            <select id="account_type" name="account_type" required class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+            <select id="account_type" name="account_type" required class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
                 <option value="provider" @selected(old('account_type') === 'provider')>Provider</option>
                 <option value="buyer" @selected(old('account_type') === 'buyer')>Buyer</option>
                 <option value="both" @selected(old('account_type') === 'both')>Provider and buyer</option>
@@ -50,7 +50,7 @@
         </div>
 
         <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
+            <a class="rounded-md text-sm text-slate-600 underline hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:text-slate-400 dark:hover:text-white dark:focus:ring-offset-slate-900" href="{{ route('login') }}">
                 {{ __('Already registered?') }}
             </a>
 

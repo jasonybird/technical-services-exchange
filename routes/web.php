@@ -17,6 +17,11 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SocialPostController;
 use App\Http\Controllers\WorkOrderMessageController;
 use App\Http\Controllers\WorkOrderController;
+use App\Models\BuyerProfile;
+use App\Models\Dispute;
+use App\Models\JobPost;
+use App\Models\ProviderProfile;
+use App\Models\WorkOrder;
 use Illuminate\Support\Facades\Route;
 
 $basePath = trim((string) config('app.base_path', ''), '/');
@@ -31,7 +36,15 @@ Route::get('/terms', function () {
 })->name('terms');
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    return view('dashboard', [
+        'counts' => [
+            'providers' => ProviderProfile::count(),
+            'buyers' => BuyerProfile::count(),
+            'jobs' => JobPost::count(),
+            'workOrders' => WorkOrder::count(),
+            'disputes' => Dispute::count(),
+        ],
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

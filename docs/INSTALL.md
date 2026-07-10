@@ -31,6 +31,7 @@ APP_DIR=/var/www/technical-services-exchange bash /var/www/technical-services-ex
 ## Important Notes
 
 - The installer is a first-pass Ubuntu/Nginx helper, not a universal hosting panel installer.
+- Local and CI test runners need PHP SQLite support: `pdo_sqlite` and `sqlite3`.
 - Review `.env` before production use.
 - Configure real mail before inviting users.
 - Move sessions, cache, and queues to Redis before serious traffic.

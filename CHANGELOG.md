@@ -8,6 +8,9 @@ This project uses Git as the primary rollback trail. The `.old` convention is re
 
 ### Added
 
+- Added a Phase 1 UI system pass with dark/light theme support, shared page/action/stat components, a product-focused home page, and a more useful dashboard.
+- Added roadmap guardrails for open-source-friendly dependencies, public themes, and future license audits.
+- Documented `pdo_sqlite` and `sqlite3` as required PHP extensions for SQLite-backed local tests and first-pass deployments.
 - Created the Laravel Provider Exchange prototype with Breeze authentication, seeded demo users, and role support for admins, providers, buyers, and hybrid accounts.
 - Added provider and buyer profile management with service areas, profile details, and external profile snapshot records.
 - Added social posts, buyer job posts, provider quotes, quote revisions, quote decline flow, and buyer quote acceptance.

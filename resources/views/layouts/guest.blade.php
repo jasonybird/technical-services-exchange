@@ -12,17 +12,28 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
+        <script>
+            (function () {
+                const stored = localStorage.getItem('tse-theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (stored === 'dark' || (!stored && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                }
+            })();
+        </script>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
-            <div>
-                <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
+    <body class="font-sans">
+        <div class="min-h-screen flex flex-col sm:justify-center items-center px-4 pt-6 sm:pt-0 bg-slate-100 dark:bg-slate-950">
+            <div class="flex items-center gap-3">
+                <a href="{{ url('/') }}" class="flex items-center gap-3 text-slate-950 dark:text-white">
+                    <x-application-logo class="h-10 w-10 fill-current text-sky-600 dark:text-sky-400" />
+                    <span class="text-lg font-semibold">Provider Exchange</span>
                 </a>
+                <x-theme-toggle />
             </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
+            <div class="w-full sm:max-w-md mt-6 overflow-hidden rounded-lg border border-slate-200 bg-white px-6 py-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 {{ $slot }}
             </div>
         </div>

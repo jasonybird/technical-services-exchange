@@ -17,7 +17,7 @@ This document records the explicit runtime requirements and server changes for P
   - `mbstring`
   - `openssl`
   - `pdo`
-  - `pdo_sqlite` for the first live test deployment
+  - `pdo_sqlite` for SQLite test deployments and the default automated test suite
   - `session`
   - `tokenizer`
   - `xml`
@@ -27,6 +27,12 @@ This document records the explicit runtime requirements and server changes for P
   - `storage/`
   - `bootstrap/cache/`
   - the SQLite database file for SQLite test deployments.
+
+## Local Test Requirements
+
+- The default PHPUnit configuration uses an in-memory SQLite database, so whichever PHP runtime executes `php artisan test` must include `pdo_sqlite` and `sqlite3`.
+- On Windows, `php -m` should list both `PDO` and `pdo_sqlite`; otherwise the feature tests fail before reaching app code with `could not find driver`.
+- WSL Ubuntu is acceptable for local verification when Windows PHP is missing SQLite support, as long as WSL PHP has `pdo_sqlite` and `sqlite3`.
 
 ## Recommended Production Runtime
 
