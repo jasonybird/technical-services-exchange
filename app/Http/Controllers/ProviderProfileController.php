@@ -11,7 +11,9 @@ class ProviderProfileController extends Controller
 {
     public function index(Request $request): View
     {
-        $profiles = ProviderProfile::with('user', 'externalImports', 'attachments', 'ratings.user');
+        $profiles = ProviderProfile::with('user', 'externalImports', 'attachments', 'ratings.user')
+            ->withAvg(['ratings as average_stars' => fn ($query) => $query->whereNotNull('stars')], 'stars')
+            ->withCount('ratings');
 
         if ($search = $request->string('q')->toString()) {
             $profiles->where(fn ($query) => $query
@@ -22,8 +24,31 @@ class ProviderProfileController extends Controller
             );
         }
 
+        if ($serviceArea = $request->string('service_area')->toString()) {
+            $profiles->where('service_area', 'like', "%{$serviceArea}%");
+        }
+
+        if ($skill = $request->string('skill')->toString()) {
+            $profiles->where('skills', 'like', "%{$skill}%");
+        }
+
+        if ($insurance = $request->string('insurance')->toString()) {
+            $profiles->where('insurance_status', 'like', "%{$insurance}%");
+        }
+
+        if ($request->boolean('public_contact')) {
+            $profiles->where('public_contact', true);
+        }
+
+        match ($request->string('sort')->toString()) {
+            'name' => $profiles->orderBy('business_name'),
+            'rating' => $profiles->orderByDesc('average_stars')->orderByDesc('ratings_count'),
+            default => $profiles->latest(),
+        };
+
         return view('providers.index', [
-            'profiles' => $profiles->latest()->paginate(20)->withQueryString(),
+            'profiles' => $profiles->paginate(20)->withQueryString(),
+            'filters' => $request->only(['q', 'service_area', 'skill', 'insurance', 'public_contact', 'sort']),
         ]);
     }
 

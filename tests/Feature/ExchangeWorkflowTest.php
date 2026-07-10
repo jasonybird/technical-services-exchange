@@ -115,6 +115,87 @@ class ExchangeWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_provider_directory_can_filter_and_sort_profiles(): void
+    {
+        $networkProvider = $this->userWithRole('provider');
+        $fiberProvider = $this->userWithRole('provider');
+
+        $networkProfile = ProviderProfile::create([
+            'user_id' => $networkProvider->id,
+            'business_name' => 'Alpha Network Services',
+            'headline' => 'Retail network support',
+            'service_area' => 'Tulsa and Oklahoma City',
+            'skills' => 'POS, network, router installs',
+            'insurance_status' => 'COI available',
+            'public_contact' => true,
+        ]);
+
+        ProviderProfile::create([
+            'user_id' => $fiberProvider->id,
+            'business_name' => 'Beta Fiber Works',
+            'headline' => 'Fiber contractor',
+            'service_area' => 'Kansas City',
+            'skills' => 'Fiber splicing',
+            'insurance_status' => 'Insured',
+            'public_contact' => false,
+        ]);
+
+        $this->actingAs($fiberProvider)->post('/ratings', [
+            'rateable_type' => 'provider_profile',
+            'rateable_id' => $networkProfile->id,
+            'category' => 'provider_overall',
+            'stars' => 5,
+            'body' => 'Strong network work.',
+        ])->assertRedirect();
+
+        $this->get('/providers?service_area=Tulsa&skill=network&insurance=COI&public_contact=1&sort=rating')
+            ->assertOk()
+            ->assertSee('Alpha Network Services')
+            ->assertSee('Public contact')
+            ->assertSee('5/5')
+            ->assertDontSee('Beta Fiber Works');
+    }
+
+    public function test_buyer_directory_can_filter_and_sort_profiles(): void
+    {
+        $retailBuyer = $this->userWithRole('buyer');
+        $warehouseBuyer = $this->userWithRole('buyer');
+
+        $retailProfile = $retailBuyer->buyerProfile()->create([
+            'company_name' => 'Alpha Retail Dispatch',
+            'headline' => 'Nationwide retail IT',
+            'service_categories' => 'Retail IT, POS, networking',
+            'hiring_regions' => 'Oklahoma and Texas',
+            'payment_terms' => 'Direct ACH Net 15',
+            'vendor_onboarding' => 'W9 and COI required',
+            'public_contact' => true,
+        ]);
+
+        $warehouseBuyer->buyerProfile()->create([
+            'company_name' => 'Beta Warehouse Group',
+            'headline' => 'Warehouse projects',
+            'service_categories' => 'Low voltage',
+            'hiring_regions' => 'Michigan',
+            'payment_terms' => 'Paper check',
+            'public_contact' => false,
+        ]);
+
+        $this->actingAs($warehouseBuyer)->post('/ratings', [
+            'rateable_type' => 'buyer_profile',
+            'rateable_id' => $retailProfile->id,
+            'category' => 'buyer_overall',
+            'stars' => 4,
+            'body' => 'Clear terms.',
+        ])->assertRedirect();
+
+        $this->get('/buyers?category=POS&region=Oklahoma&payment=ACH&public_contact=1&sort=rating')
+            ->assertOk()
+            ->assertSee('Alpha Retail Dispatch')
+            ->assertSee('Public contact')
+            ->assertSee('4/5')
+            ->assertDontSee('Beta Warehouse Group');
+    }
+
     public function test_invalid_work_order_transition_is_rejected(): void
     {
         [, $provider, $workOrder] = $this->workOrderFixture();

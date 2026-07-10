@@ -12,6 +12,7 @@ This project uses Git as the primary rollback trail. The `.old` convention is re
 - Added roadmap guardrails for open-source-friendly dependencies, public themes, and future license audits.
 - Documented `pdo_sqlite` and `sqlite3` as required PHP extensions for SQLite-backed local tests and first-pass deployments.
 - Documented the preferred local-to-GitHub-to-remote-update workflow and the ChristIT conversion from rsync test deploy to Git checkout.
+- Added Phase 2 directory quality improvements with advanced provider/buyer filters, sort controls, profile badges, rating-aware cards, result counts, and empty states.
 - Created the Laravel Provider Exchange prototype with Breeze authentication, seeded demo users, and role support for admins, providers, buyers, and hybrid accounts.
 - Added provider and buyer profile management with service areas, profile details, and external profile snapshot records.
 - Added social posts, buyer job posts, provider quotes, quote revisions, quote decline flow, and buyer quote acceptance.

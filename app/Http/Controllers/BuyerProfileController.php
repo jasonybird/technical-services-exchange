@@ -11,7 +11,9 @@ class BuyerProfileController extends Controller
 {
     public function index(Request $request): View
     {
-        $profiles = BuyerProfile::with('user', 'attachments', 'ratings.user');
+        $profiles = BuyerProfile::with('user', 'attachments', 'ratings.user')
+            ->withAvg(['ratings as average_stars' => fn ($query) => $query->whereNotNull('stars')], 'stars')
+            ->withCount('ratings');
 
         if ($search = $request->string('q')->toString()) {
             $profiles->where(fn ($query) => $query
@@ -22,8 +24,31 @@ class BuyerProfileController extends Controller
             );
         }
 
+        if ($category = $request->string('category')->toString()) {
+            $profiles->where('service_categories', 'like', "%{$category}%");
+        }
+
+        if ($region = $request->string('region')->toString()) {
+            $profiles->where('hiring_regions', 'like', "%{$region}%");
+        }
+
+        if ($payment = $request->string('payment')->toString()) {
+            $profiles->where('payment_terms', 'like', "%{$payment}%");
+        }
+
+        if ($request->boolean('public_contact')) {
+            $profiles->where('public_contact', true);
+        }
+
+        match ($request->string('sort')->toString()) {
+            'name' => $profiles->orderBy('company_name'),
+            'rating' => $profiles->orderByDesc('average_stars')->orderByDesc('ratings_count'),
+            default => $profiles->latest(),
+        };
+
         return view('buyers.index', [
-            'profiles' => $profiles->latest()->paginate(20)->withQueryString(),
+            'profiles' => $profiles->paginate(20)->withQueryString(),
+            'filters' => $request->only(['q', 'category', 'region', 'payment', 'public_contact', 'sort']),
         ]);
     }
 
