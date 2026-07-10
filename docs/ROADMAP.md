@@ -50,9 +50,8 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 
 ## Phase Checkpoint
 
-Phases 1-4 have been implemented and shipped through the local -> GitHub -> ChristIT update workflow. The next active planning block is:
+Phases 1-5 have been implemented locally. Phases 1-4 have been shipped through the local -> GitHub -> ChristIT update workflow; Phase 5 is ready for the next ship/update pass. The next active planning block is:
 
-5. Reputation refinement: rating category definitions, anti-abuse controls, edit windows, report flows, and moderation views.
 6. Dispute workflow: better evidence timelines, reason-coded votes, scope-expansion and unreachable-contact reasons, quorum/visibility rules, and admin/community moderation tools.
 7. Notifications: channel preferences, email templates, and event-specific subscription controls.
 8. API/mobile prep: token-scoped endpoints, versioned API resources, geolocation check-in groundwork, contact/support failure logging, and mobile-safe work-order actions.
@@ -74,6 +73,16 @@ Reputation safeguards to carry into Phase 5:
 - Separate imported marketplace history from native TSE reputation.
 - Require explainable formulas, provider response rights, report/appeal paths, and moderation audit trails for any composite reputation badge.
 
+Phase 5 implementation completed:
+
+- Review category definitions are centralized in `config/reputation.php`.
+- Buyer-to-provider and provider-to-buyer reviews now use explicit category sets.
+- Reviewees can publish a response.
+- Participants can report reviews for moderation.
+- Admins can moderate reported reviews from the admin dashboard.
+- Review edits are limited by a configurable edit window.
+- Imported marketplace history is labeled separately from native TSE reputation.
+
 Available-work safeguards to carry into directory and job-list phases:
 
 - Available jobs should expose pay type, provider terms, schedule type, work type, rough location, buyer reliability, support/contact certification, scope clarity status, and request/quote count.
@@ -84,6 +93,8 @@ Available-work safeguards to carry into directory and job-list phases:
 - Keep every filter and table action visibly labeled or accessible to screen readers.
 
 The July 10, 2026 Field Nation product review is captured in `docs/PLATFORM_RESEARCH.md` and should inform Phases 5, 8, 9, and 10 without copying private third-party work-order data into this repository.
+
+The reconciled forward plan from the current codebase is captured in `docs/FORWARD_PHASE_PLAN.md`. That document supersedes the older loose Phase 5-10 outline for next implementation sequencing while preserving the same product direction.
 
 ## Scaling Risks To Track
 

@@ -84,6 +84,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/work-orders/{workOrder}/transition', [WorkOrderController::class, 'transition'])->name('work-orders.transition');
     Route::post('/work-orders/{workOrder}/messages', [WorkOrderMessageController::class, 'store'])->name('work-order-messages.store');
     Route::post('/work-orders/{workOrder}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::post('/reviews/{review}/response', [ReviewController::class, 'respond'])->name('reviews.respond');
+    Route::post('/reviews/{review}/report', [ReviewController::class, 'report'])->name('reviews.report');
+    Route::patch('/reviews/{review}/moderation', [ReviewController::class, 'moderate'])->name('reviews.moderate');
     Route::post('/work-orders/{workOrder}/disputes', [DisputeController::class, 'store'])->name('disputes.store');
     Route::get('/disputes/{dispute}', [DisputeController::class, 'show'])->name('disputes.show');
     Route::post('/disputes/{dispute}/votes', [DisputeVoteController::class, 'store'])->name('dispute-votes.store');

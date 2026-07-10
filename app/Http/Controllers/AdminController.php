@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Attachment;
 use App\Models\Dispute;
 use App\Models\JobPost;
+use App\Models\Review;
 use App\Models\User;
 use App\Models\WorkOrder;
 use Illuminate\Http\Request;
@@ -28,6 +29,11 @@ class AdminController extends Controller
             'jobs' => JobPost::with('buyer')->latest()->limit(10)->get(),
             'workOrders' => WorkOrder::with('jobPost', 'buyer', 'provider')->latest()->limit(10)->get(),
             'disputes' => Dispute::with('workOrder.jobPost', 'openedBy')->latest()->limit(10)->get(),
+            'reportedReviews' => Review::with('workOrder.jobPost', 'reviewer', 'reviewee', 'reportedBy')
+                ->where('moderation_status', 'reported')
+                ->latest('reported_at')
+                ->limit(10)
+                ->get(),
         ]);
     }
 }

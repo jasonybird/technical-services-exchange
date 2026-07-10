@@ -80,7 +80,12 @@
                 <h3 class="font-semibold text-slate-950 dark:text-white">Imported profile and review history</h3>
                 @forelse ($profile->externalImports as $import)
                     <div class="mt-4 rounded-md border border-slate-200 p-4 dark:border-slate-800">
-                        <p class="font-semibold text-slate-950 dark:text-white">{{ $import->platform }} {{ $import->external_id ? '#'.$import->external_id : '' }}</p>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <p class="font-semibold text-slate-950 dark:text-white">{{ $import->platform }} {{ $import->external_id ? '#'.$import->external_id : '' }}</p>
+                            <x-badge tone="amber">Imported history</x-badge>
+                            <x-badge tone="slate">{{ $import->status }}</x-badge>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Imported marketplace history is provider-controlled context. It is separate from native TSE reputation unless independently verified later.</p>
                         <p class="text-sm text-slate-600 dark:text-slate-400">Rating: {{ $import->rating ?? 'n/a' }} | Reviews: {{ $import->review_count ?? 'n/a' }} | Completed: {{ $import->completed_jobs ?? 'n/a' }}</p>
                         <p class="mt-2 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">{{ $import->notes }}</p>
                         <x-attachments :attachments="$import->attachments" />

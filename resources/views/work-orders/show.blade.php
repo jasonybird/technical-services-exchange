@@ -165,24 +165,134 @@
 
         <section class="tse-panel p-6">
             <h3 class="font-semibold text-slate-950 dark:text-white">Reviews</h3>
+            @php
+                $reviewType = auth()->id() === $workOrder->buyer_id ? 'buyer_to_provider' : 'provider_to_buyer';
+                $definitions = config("reputation.definitions.$reviewType", []);
+                $reviewFields = $reviewType === 'buyer_to_provider'
+                    ? [
+                        'communication_rating' => 'Communication',
+                        'preparedness_rating' => 'Preparedness',
+                        'workmanship_rating' => 'Workmanship',
+                        'timeliness_rating' => 'Timeliness',
+                        'closeout_quality_rating' => 'Closeout quality',
+                        'professionalism_rating' => 'Professionalism',
+                    ]
+                    : [
+                        'communication_rating' => 'Communication',
+                        'scope_accuracy_rating' => 'Scope accuracy',
+                        'payment_reliability_rating' => 'Payment reliability',
+                        'contact_availability_rating' => 'Contact availability',
+                        'schedule_reasonableness_rating' => 'Schedule reasonableness',
+                        'support_responsiveness_rating' => 'Support responsiveness',
+                        'closeout_fairness_rating' => 'Closeout fairness',
+                    ];
+                $fieldDefinitionKeys = [
+                    'communication_rating' => 'communication',
+                    'preparedness_rating' => 'preparedness',
+                    'workmanship_rating' => 'workmanship',
+                    'timeliness_rating' => 'timeliness',
+                    'closeout_quality_rating' => 'closeout_quality',
+                    'professionalism_rating' => 'professionalism',
+                    'scope_accuracy_rating' => 'scope_accuracy',
+                    'payment_reliability_rating' => 'payment_reliability',
+                    'contact_availability_rating' => 'contact_availability',
+                    'schedule_reasonableness_rating' => 'schedule_reasonableness',
+                    'support_responsiveness_rating' => 'support_responsiveness',
+                    'closeout_fairness_rating' => 'closeout_fairness',
+                ];
+            @endphp
+            <div class="mt-3 rounded-md border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-100">
+                <p class="font-semibold">Transparent review rules</p>
+                <p class="mt-1">{{ $definitions['overall'] ?? 'Reviews stay five-star based and visible. Category scores explain the evidence instead of hiding it behind a platform score.' }}</p>
+                <p class="mt-2 text-xs">Reviews can be edited for {{ config('reputation.review_edit_window_hours', 48) }} hours, responded to by the reviewee, and reported for moderation.</p>
+            </div>
             <form method="POST" action="{{ route('reviews.store', $workOrder) }}" class="mt-4 space-y-4">
                 @csrf
-                <div class="grid gap-4 md:grid-cols-3">
-                    <x-field name="rating" label="Rating 1-5" type="number" />
-                    <x-field name="communication_rating" label="Communication 1-5" type="number" />
-                    <x-field name="scope_accuracy_rating" label="Scope accuracy 1-5" type="number" />
-                    <x-field name="payment_reliability_rating" label="Payment reliability 1-5" type="number" />
-                    <x-field name="workmanship_rating" label="Workmanship 1-5" type="number" />
-                    <x-field name="timeliness_rating" label="Timeliness 1-5" type="number" />
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div class="md:col-span-2">
+                        <x-field name="rating" label="Overall rating 1-5" type="number" />
+                    </div>
+                    @foreach ($reviewFields as $field => $label)
+                        @php($definitionKey = $fieldDefinitionKeys[$field] ?? null)
+                        <div>
+                            <x-field name="{{ $field }}" label="{{ $label }} 1-5" type="number" />
+                            @if ($definitionKey && ! empty($definitions[$definitionKey]))
+                                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ $definitions[$definitionKey] }}</p>
+                            @endif
+                        </div>
+                    @endforeach
                 </div>
                 <x-field name="body" label="Review" textarea />
                 <x-primary-button>Save review</x-primary-button>
             </form>
             @foreach ($workOrder->reviews as $review)
+                @php
+                    $isHidden = $review->moderation_status === 'hidden';
+                    $categoryValues = [
+                        'Communication' => $review->communication_rating,
+                        'Preparedness' => $review->preparedness_rating,
+                        'Scope' => $review->scope_accuracy_rating,
+                        'Payment' => $review->payment_reliability_rating,
+                        'Contact availability' => $review->contact_availability_rating,
+                        'Schedule' => $review->schedule_reasonableness_rating,
+                        'Support' => $review->support_responsiveness_rating,
+                        'Closeout fairness' => $review->closeout_fairness_rating,
+                        'Workmanship' => $review->workmanship_rating,
+                        'Timeliness' => $review->timeliness_rating,
+                        'Closeout quality' => $review->closeout_quality_rating,
+                        'Professionalism' => $review->professionalism_rating,
+                    ];
+                    $categoryLine = collect($categoryValues)
+                        ->filter(fn ($value) => $value !== null)
+                        ->map(fn ($value, $label) => "$label $value")
+                        ->implode(' | ');
+                @endphp
                 <div class="mt-4 rounded-md border border-slate-200 p-4 text-sm dark:border-slate-800">
-                    <p class="font-semibold text-slate-950 dark:text-white">{{ $review->reviewer->name }} rated {{ $review->reviewee->name }} {{ $review->rating }}/5</p>
-                    <p class="mt-1 text-slate-600 dark:text-slate-400">Communication {{ $review->communication_rating ?? 'n/a' }} | Scope {{ $review->scope_accuracy_rating ?? 'n/a' }} | Payment {{ $review->payment_reliability_rating ?? 'n/a' }} | Workmanship {{ $review->workmanship_rating ?? 'n/a' }} | Timeliness {{ $review->timeliness_rating ?? 'n/a' }}</p>
-                    <p class="mt-2 whitespace-pre-line text-slate-700 dark:text-slate-300">{{ $review->body }}</p>
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <p class="font-semibold text-slate-950 dark:text-white">{{ $review->reviewer->name }} rated {{ $review->reviewee->name }} {{ $review->rating }}/5</p>
+                            <p class="mt-1 text-slate-600 dark:text-slate-400">{{ str_replace('_', ' ', $review->review_type) }} | {{ $review->created_at->diffForHumans() }}</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            @if ($review->moderation_status === 'reported')
+                                <x-badge tone="amber">Reported</x-badge>
+                            @elseif ($isHidden)
+                                <x-badge tone="rose">Hidden</x-badge>
+                            @else
+                                <x-badge tone="emerald">Published</x-badge>
+                            @endif
+                            @if ($review->editableBy(auth()->user()))
+                                <x-badge tone="slate">Editable</x-badge>
+                            @endif
+                        </div>
+                    </div>
+                    @if ($isHidden && ! auth()->user()->hasRole('admin'))
+                        <p class="mt-3 text-slate-600 dark:text-slate-400">This review is hidden pending moderation.</p>
+                    @else
+                        @if ($categoryLine)
+                            <p class="mt-2 text-slate-600 dark:text-slate-400">{{ $categoryLine }}</p>
+                        @endif
+                        <p class="mt-2 whitespace-pre-line text-slate-700 dark:text-slate-300">{{ $review->body }}</p>
+                        @if ($review->response_body)
+                            <div class="mt-3 rounded-md bg-slate-50 p-3 dark:bg-slate-950">
+                                <p class="font-semibold text-slate-950 dark:text-white">Response from {{ $review->reviewee->name }}</p>
+                                <p class="mt-1 whitespace-pre-line text-slate-700 dark:text-slate-300">{{ $review->response_body }}</p>
+                            </div>
+                        @elseif (auth()->id() === $review->reviewee_id || auth()->user()->hasRole('admin'))
+                            <form method="POST" action="{{ route('reviews.respond', $review) }}" class="mt-3 space-y-3 rounded-md bg-slate-50 p-3 dark:bg-slate-950">
+                                @csrf
+                                <x-field name="response_body" label="Public response" textarea />
+                                <x-secondary-button type="submit">Save response</x-secondary-button>
+                            </form>
+                        @endif
+                        @if (in_array(auth()->id(), [$review->reviewer_id, $review->reviewee_id], true) || auth()->user()->hasRole('admin'))
+                            <form method="POST" action="{{ route('reviews.report', $review) }}" class="mt-3 space-y-3 border-t border-slate-200 pt-3 dark:border-slate-800">
+                                @csrf
+                                <x-field name="report_reason" label="Report this review for moderation" textarea />
+                                <x-secondary-button type="submit">Report review</x-secondary-button>
+                            </form>
+                        @endif
+                    @endif
                 </div>
             @endforeach
         </section>

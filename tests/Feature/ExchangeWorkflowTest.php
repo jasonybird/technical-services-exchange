@@ -96,6 +96,85 @@ class ExchangeWorkflowTest extends TestCase
         $this->assertDatabaseHas('disputes', ['work_order_id' => $workOrder->id, 'summary' => 'Scope changed']);
     }
 
+    public function test_reviews_support_category_governance_response_reporting_and_moderation(): void
+    {
+        [$buyer, $provider, $workOrder] = $this->workOrderFixture();
+        $admin = $this->userWithRole('admin');
+
+        $this->actingAs($buyer)->post("/work-orders/{$workOrder->id}/reviews", [
+            'rating' => 5,
+            'communication_rating' => 5,
+            'preparedness_rating' => 4,
+            'workmanship_rating' => 5,
+            'timeliness_rating' => 5,
+            'closeout_quality_rating' => 4,
+            'professionalism_rating' => 5,
+            'body' => 'Provider completed the work cleanly.',
+        ])->assertRedirect("/work-orders/{$workOrder->id}");
+
+        $review = $workOrder->reviews()->firstOrFail();
+
+        $this->assertDatabaseHas('reviews', [
+            'id' => $review->id,
+            'review_type' => 'buyer_to_provider',
+            'preparedness_rating' => 4,
+            'closeout_quality_rating' => 4,
+            'moderation_status' => 'published',
+        ]);
+
+        $this->actingAs($provider)->post("/reviews/{$review->id}/response", [
+            'response_body' => 'Thank you. Scope and closeout were clear.',
+        ])->assertRedirect("/work-orders/{$workOrder->id}");
+
+        $this->actingAs($provider)->post("/reviews/{$review->id}/report", [
+            'report_reason' => 'Testing moderation workflow.',
+        ])->assertRedirect("/work-orders/{$workOrder->id}");
+
+        $review->refresh();
+        $this->assertSame('reported', $review->moderation_status);
+        $this->assertSame($provider->id, $review->reported_by_id);
+        $this->assertNotNull($review->response_at);
+
+        $this->actingAs($admin)->get('/admin')
+            ->assertOk()
+            ->assertSee('Reported reviews')
+            ->assertSee('Testing moderation workflow.');
+
+        $this->actingAs($admin)->patch("/reviews/{$review->id}/moderation", [
+            'moderation_status' => 'hidden',
+            'moderation_notes' => 'Hidden during review.',
+        ])->assertRedirect('/admin');
+
+        $this->assertDatabaseHas('reviews', [
+            'id' => $review->id,
+            'moderation_status' => 'hidden',
+            'moderated_by_id' => $admin->id,
+            'moderation_notes' => 'Hidden during review.',
+        ]);
+    }
+
+    public function test_review_edit_window_blocks_late_non_admin_edits(): void
+    {
+        [$buyer, $provider, $workOrder] = $this->workOrderFixture();
+
+        $this->actingAs($buyer)->post("/work-orders/{$workOrder->id}/reviews", [
+            'rating' => 4,
+            'body' => 'Initial review.',
+        ])->assertRedirect("/work-orders/{$workOrder->id}");
+
+        $review = $workOrder->reviews()->firstOrFail();
+        $review->forceFill([
+            'created_at' => now()->subHours(((int) config('reputation.review_edit_window_hours', 48)) + 1),
+        ])->save();
+
+        $this->actingAs($buyer)->post("/work-orders/{$workOrder->id}/reviews", [
+            'rating' => 5,
+            'body' => 'Late edit.',
+        ])->assertStatus(422);
+
+        $this->assertSame('Initial review.', $review->fresh()->body);
+    }
+
     public function test_work_order_details_checklist_change_requests_and_print_view_work(): void
     {
         [$buyer, $provider, $workOrder] = $this->workOrderFixture();
