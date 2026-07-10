@@ -48,6 +48,43 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 12. Deployment hardening: production environment docs, queue worker setup, scheduler setup, storage policy, and server provisioning notes.
 13. License and runtime audit: generate and review PHP and JavaScript dependency license reports before adding external theme kits, map any risky package to a replacement, and keep required local/runtime extensions such as `pdo_sqlite` documented for testability.
 
+## Phase Checkpoint
+
+Phases 1-4 have been implemented and shipped through the local -> GitHub -> ChristIT update workflow. The next active planning block is:
+
+5. Reputation refinement: rating category definitions, anti-abuse controls, edit windows, report flows, and moderation views.
+6. Dispute workflow: better evidence timelines, reason-coded votes, scope-expansion and unreachable-contact reasons, quorum/visibility rules, and admin/community moderation tools.
+7. Notifications: channel preferences, email templates, and event-specific subscription controls.
+8. API/mobile prep: token-scoped endpoints, versioned API resources, geolocation check-in groundwork, contact/support failure logging, and mobile-safe work-order actions.
+9. Import tooling: guided manual imports for Field Nation, WorkMarket, and similar profile/review history.
+10. Competency tags and levels: provider/buyer tag taxonomies, smart-hands entry lane, specialty tags such as network, POTS, POS, AV, cabling, installer, and troubleshooter, plus earned level badges based on completed work and reputation signals.
+
+Work-order safeguards to carry into the next implementation passes:
+
+- Scope clarity: every job/work order should identify the primary objective, included work, excluded work, required tools/equipment, maximum onsite expectations, and the change-request path for out-of-scope work.
+- Anti-catch-all rule: long pasted instruction blocks should not be allowed to override the structured scope fields or create undefined onsite obligations.
+- Contact accountability: buyers should certify that primary contact, backup contact, and support/escalation channels will be reachable during the scheduled work window.
+- Evidence path: providers should be able to record unreachable contacts, unsupported scope expansion, and missing buyer support as structured events that can feed disputes and reviews.
+
+Reputation safeguards to carry into Phase 5:
+
+- Keep five-star reviews as a primary readable signal.
+- Add transparent sub-metrics for operational behavior without replacing reviews with an opaque platform-controlled score.
+- Show long-term history and recent operational metrics side by side.
+- Separate imported marketplace history from native TSE reputation.
+- Require explainable formulas, provider response rights, report/appeal paths, and moderation audit trails for any composite reputation badge.
+
+Available-work safeguards to carry into directory and job-list phases:
+
+- Available jobs should expose pay type, provider terms, schedule type, work type, rough location, buyer reliability, support/contact certification, scope clarity status, and request/quote count.
+- Filters should support distance, pay floor, work category, schedule type, buyer rating, scope clarity, and support availability.
+- Risk badges should identify broad scope, missing contact backup, missing deliverables, missing required tools, compressed schedules, and unclear closeout requirements.
+- Keep the primary filter bar compact: work category, coverage/radius or remote mode, keyword search, reset, and saved/advanced filters.
+- Model work categories as nested taxonomy records with broad families and specific specialties.
+- Keep every filter and table action visibly labeled or accessible to screen readers.
+
+The July 10, 2026 Field Nation product review is captured in `docs/PLATFORM_RESEARCH.md` and should inform Phases 5, 8, 9, and 10 without copying private third-party work-order data into this repository.
+
 ## Scaling Risks To Track
 
 - Search and filtering will need proper database indexes first, then a dedicated search service if directory/job volume grows.
