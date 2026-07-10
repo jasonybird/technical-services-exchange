@@ -28,6 +28,13 @@ Or from anywhere:
 APP_DIR=/var/www/technical-services-exchange bash /var/www/technical-services-exchange/scripts/update.sh
 ```
 
+The preferred working loop for this project is:
+
+1. Make and test changes locally.
+2. Commit and push to GitHub.
+3. SSH to the server and run `bash scripts/update.sh` from the deployed Git checkout.
+4. Smoke test the live URL after the update completes.
+
 ## Important Notes
 
 - The installer is a first-pass Ubuntu/Nginx helper, not a universal hosting panel installer.

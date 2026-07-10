@@ -97,3 +97,11 @@ Initial test data/runtime:
 - Confirmed seeded admin login succeeds and redirects to `https://christit.com/tse/dashboard`.
 - No PHP-FPM version changes have been made.
 - No database server changes have been made.
+- Installed Composer on the remote server through Ubuntu packages so future updates can install PHP dependencies from `composer.lock`.
+- Converted `/sites/provider-exchange` from the initial rsync test deployment into a Git checkout of `https://github.com/jasonybird/technical-services-exchange.git`.
+- Preserved the previous rsync deployment at `/sites/provider-exchange.pre-git-20260710-125739`.
+- Preserved the existing production `.env`, SQLite database, and Laravel `storage/` contents during the Git checkout conversion.
+- Confirmed remote Git checkout at commit `b45a9ec`.
+- Confirmed `bash scripts/update.sh` works from the remote Git checkout: Git pull, Composer install, npm install, Vite build, migrations, and Laravel cache rebuild completed successfully.
+- Confirmed remote working tree is clean after normalizing copied `storage/` placeholder file modes.
+- Confirmed authenticated smoke login with `admin@example.com` reaches `https://christit.com/tse/dashboard` and renders dashboard count content.
