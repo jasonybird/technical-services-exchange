@@ -43,6 +43,18 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 9. Admin operations: audit logs, queue health, system status, content moderation, and backup/export workflows.
 10. Deployment hardening: production environment docs, queue worker setup, scheduler setup, storage policy, and server provisioning notes.
 
+## Scaling Risks To Track
+
+- Search and filtering will need proper database indexes first, then a dedicated search service if directory/job volume grows.
+- Ratings and reputation pages should eventually use cached aggregates instead of recalculating averages and counts on every page view.
+- Notifications should move from the database queue to Redis-backed queues before high-volume alerting or email delivery.
+- Sessions, cache, and queues should move to Redis before running more than one web node.
+- Uploaded evidence, profile images, and deliverable files should move to shared or object storage before multi-server deployment.
+- Work-order timelines, dispute activity, messages, and notification tables need careful indexes before large production use.
+- Realtime chat, websocket presence, mobile push, and geolocation check-ins should be added as deliberate service layers instead of bolted onto normal page requests.
+- Background imports, image processing, moderation summaries, and reputation recalculation should run through queue workers rather than web requests.
+- Production deployments need explicit PHP-FPM pool, Nginx, scheduler, queue worker, backup, and log rotation documentation.
+
 ## Future/Deferred
 
 - Escrow or payment custody.
