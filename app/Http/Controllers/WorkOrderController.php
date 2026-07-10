@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\WorkOrder;
+use App\Notifications\ExchangeEventNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -34,7 +35,9 @@ class WorkOrderController extends Controller
                 'acceptedQuote',
                 'reviews.reviewer',
                 'reviews.reviewee',
-                'disputes.openedBy'
+                'disputes.openedBy',
+                'messages.user',
+                'attachments',
             ),
         ]);
     }
@@ -49,6 +52,9 @@ class WorkOrderController extends Controller
         ]);
 
         $status = $data['status'];
+        abort_unless($workOrder->canTransitionTo($status), 422, 'This status transition is not allowed.');
+        $this->authorizeTransitionRole($request, $workOrder, $status);
+
         $timestamps = [
             'en_route' => 'en_route_at',
             'on_site' => 'on_site_at',
@@ -77,6 +83,17 @@ class WorkOrderController extends Controller
 
         $workOrder->update($updates);
 
+        $recipient = $request->user()->id === $workOrder->buyer_id
+            ? $workOrder->provider
+            : $workOrder->buyer;
+
+        $recipient->notify(new ExchangeEventNotification(
+            'Work order updated',
+            $request->user()->name.' changed '.$workOrder->jobPost->title.' to '.str_replace('_', ' ', $status).'.',
+            route('work-orders.show', $workOrder),
+            'work_order_status'
+        ));
+
         return redirect()->route('work-orders.show', $workOrder)->with('status', 'Work order updated.');
     }
 
@@ -87,5 +104,22 @@ class WorkOrderController extends Controller
                 || $request->user()->hasRole('admin'),
             403
         );
+    }
+
+    private function authorizeTransitionRole(Request $request, WorkOrder $workOrder, string $status): void
+    {
+        $userId = $request->user()->id;
+
+        $providerStatuses = ['en_route', 'on_site', 'in_progress', 'completed'];
+        $buyerStatuses = ['buyer_approved', 'closed', 'cancelled'];
+        $sharedStatuses = ['disputed'];
+
+        if (in_array($status, $providerStatuses, true)) {
+            abort_unless($workOrder->provider_id === $userId || $request->user()->hasRole('admin'), 403);
+        } elseif (in_array($status, $buyerStatuses, true)) {
+            abort_unless($workOrder->buyer_id === $userId || $request->user()->hasRole('admin'), 403);
+        } elseif (in_array($status, $sharedStatuses, true)) {
+            abort_unless(in_array($userId, [$workOrder->buyer_id, $workOrder->provider_id], true) || $request->user()->hasRole('admin'), 403);
+        }
     }
 }

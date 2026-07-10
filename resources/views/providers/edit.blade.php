@@ -20,6 +20,11 @@
             <x-primary-button>Save provider profile</x-primary-button>
         </form>
         @if ($profile)
+            <section class="rounded border bg-white p-6">
+                <h3 class="font-semibold">Profile photos and files</h3>
+                <x-attachments :attachments="$profile->attachments" />
+                <x-attachment-form type="provider_profile" :id="$profile->id" kind="profile" />
+            </section>
             <form method="POST" action="{{ route('provider-imports.store') }}" class="space-y-4 rounded border bg-white p-6">
                 @csrf
                 <h3 class="font-semibold">External profile snapshot</h3>

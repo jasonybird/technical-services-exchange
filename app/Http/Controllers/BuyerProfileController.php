@@ -12,7 +12,7 @@ class BuyerProfileController extends Controller
     public function index(): View
     {
         return view('buyers.index', [
-            'profiles' => BuyerProfile::with('user')->latest()->paginate(20),
+            'profiles' => BuyerProfile::with('user', 'attachments')->latest()->paginate(20),
         ]);
     }
 
@@ -21,7 +21,7 @@ class BuyerProfileController extends Controller
         abort_unless($request->user()->hasRole('buyer'), 403);
 
         return view('buyers.edit', [
-            'profile' => $request->user()->buyerProfile,
+            'profile' => $request->user()->buyerProfile?->load('attachments'),
         ]);
     }
 
@@ -55,7 +55,7 @@ class BuyerProfileController extends Controller
     public function show(BuyerProfile $buyer): View
     {
         return view('buyers.show', [
-            'profile' => $buyer->load('user'),
+            'profile' => $buyer->load('user', 'attachments'),
         ]);
     }
 }

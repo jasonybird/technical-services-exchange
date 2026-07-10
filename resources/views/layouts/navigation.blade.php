@@ -30,6 +30,11 @@
                     <x-nav-link :href="route('work-orders.index')" :active="request()->routeIs('work-orders.*')">
                         {{ __('Work Orders') }}
                     </x-nav-link>
+                    @role('admin')
+                        <x-nav-link :href="route('admin.index')" :active="request()->routeIs('admin.*')">
+                            {{ __('Admin') }}
+                        </x-nav-link>
+                    @endrole
                 </div>
             </div>
 
@@ -117,6 +122,13 @@
             <x-responsive-nav-link :href="route('work-orders.index')" :active="request()->routeIs('work-orders.*')">
                 {{ __('Work Orders') }}
             </x-responsive-nav-link>
+            @auth
+                @role('admin')
+                    <x-responsive-nav-link :href="route('admin.index')" :active="request()->routeIs('admin.*')">
+                        {{ __('Admin') }}
+                    </x-responsive-nav-link>
+                @endrole
+            @endauth
         </div>
 
         <!-- Responsive Settings Options -->

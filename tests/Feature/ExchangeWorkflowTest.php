@@ -3,9 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\JobPost;
+use App\Models\SocialPost;
 use App\Models\User;
 use App\Models\WorkOrder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -67,10 +70,14 @@ class ExchangeWorkflowTest extends TestCase
     {
         [$buyer, $provider, $workOrder] = $this->workOrderFixture();
 
-        $this->actingAs($provider)->patch("/work-orders/{$workOrder->id}/transition", [
-            'status' => 'completed',
-            'completion_notes' => 'Completed with photos.',
-        ])->assertRedirect("/work-orders/{$workOrder->id}");
+        foreach (['en_route', 'on_site', 'in_progress', 'completed'] as $status) {
+            $this->actingAs($provider)->patch("/work-orders/{$workOrder->id}/transition", [
+                'status' => $status,
+                'completion_notes' => $status === 'completed' ? 'Completed with photos.' : null,
+            ])->assertRedirect("/work-orders/{$workOrder->id}");
+
+            $workOrder->refresh();
+        }
 
         $this->actingAs($buyer)->post("/work-orders/{$workOrder->id}/reviews", [
             'rating' => 5,
@@ -104,6 +111,61 @@ class ExchangeWorkflowTest extends TestCase
             'platform' => 'Field Nation',
             'external_id' => '172-630',
         ]);
+    }
+
+    public function test_invalid_work_order_transition_is_rejected(): void
+    {
+        [, $provider, $workOrder] = $this->workOrderFixture();
+
+        $this->actingAs($provider)->patch("/work-orders/{$workOrder->id}/transition", [
+            'status' => 'completed',
+        ])->assertStatus(422);
+    }
+
+    public function test_comments_messages_dispute_votes_and_uploads_work(): void
+    {
+        Storage::fake('public');
+
+        [$buyer, $provider, $workOrder] = $this->workOrderFixture();
+        $post = SocialPost::create([
+            'user_id' => $provider->id,
+            'body' => 'Available for work.',
+            'visibility' => 'public',
+        ]);
+
+        $this->actingAs($buyer)->post('/comments', [
+            'commentable_type' => 'social_post',
+            'commentable_id' => $post->id,
+            'body' => 'Good to know.',
+        ])->assertRedirect();
+
+        $this->actingAs($buyer)->post("/work-orders/{$workOrder->id}/messages", [
+            'body' => 'Please upload completion photos.',
+        ])->assertRedirect("/work-orders/{$workOrder->id}");
+
+        $this->actingAs($provider)->post('/attachments', [
+            'attachable_type' => 'work_order',
+            'attachable_id' => $workOrder->id,
+            'caption' => 'Completion photo',
+            'file' => UploadedFile::fake()->image('complete.jpg'),
+        ])->assertRedirect();
+
+        $response = $this->actingAs($provider)->post("/work-orders/{$workOrder->id}/disputes", [
+            'summary' => 'Scope changed',
+            'claim' => 'Additional scope was requested.',
+        ])->assertRedirect();
+
+        $dispute = $workOrder->disputes()->firstOrFail();
+
+        $this->actingAs($buyer)->post("/disputes/{$dispute->id}/votes", [
+            'recommendation' => 'split',
+            'reason' => 'Both sides have partial documentation.',
+        ])->assertRedirect("/disputes/{$dispute->id}");
+
+        $this->assertDatabaseHas('comments', ['body' => 'Good to know.']);
+        $this->assertDatabaseHas('work_order_messages', ['body' => 'Please upload completion photos.']);
+        $this->assertDatabaseHas('attachments', ['caption' => 'Completion photo']);
+        $this->assertDatabaseHas('dispute_votes', ['recommendation' => 'split']);
     }
 
     private function userWithRole(string $role): User

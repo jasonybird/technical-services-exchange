@@ -9,5 +9,6 @@
             <div><dt class="text-sm text-gray-500">Vendor onboarding</dt><dd class="whitespace-pre-line">{{ $profile->vendor_onboarding }}</dd></div>
             <div><dt class="text-sm text-gray-500">Payment terms</dt><dd class="whitespace-pre-line">{{ $profile->payment_terms }}</dd></div>
         </dl>
+        <x-attachments :attachments="$profile->attachments" />
     </div>
 </x-app-layout>

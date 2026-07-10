@@ -12,7 +12,7 @@ class ProviderProfileController extends Controller
     public function index(): View
     {
         return view('providers.index', [
-            'profiles' => ProviderProfile::with('user', 'externalImports')->latest()->paginate(20),
+            'profiles' => ProviderProfile::with('user', 'externalImports', 'attachments')->latest()->paginate(20),
         ]);
     }
 
@@ -21,7 +21,7 @@ class ProviderProfileController extends Controller
         abort_unless($request->user()->hasRole('provider'), 403);
 
         return view('providers.edit', [
-            'profile' => $request->user()->providerProfile,
+            'profile' => $request->user()->providerProfile?->load('attachments', 'externalImports.attachments'),
         ]);
     }
 
@@ -59,7 +59,7 @@ class ProviderProfileController extends Controller
     public function show(ProviderProfile $provider): View
     {
         return view('providers.show', [
-            'profile' => $provider->load('user', 'externalImports'),
+            'profile' => $provider->load('user', 'externalImports.attachments', 'attachments'),
         ]);
     }
 }

@@ -1,14 +1,19 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\BuyerProfileController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DisputeController;
+use App\Http\Controllers\DisputeVoteController;
 use App\Http\Controllers\ExternalProfileImportController;
 use App\Http\Controllers\JobPostController;
 use App\Http\Controllers\ProviderProfileController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SocialPostController;
+use App\Http\Controllers\WorkOrderMessageController;
 use App\Http\Controllers\WorkOrderController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,18 +38,26 @@ Route::middleware('auth')->group(function () {
     Route::put('/buyer-profile', [BuyerProfileController::class, 'update'])->name('buyers.update');
 
     Route::post('/feed', [SocialPostController::class, 'store'])->name('feed.store');
+    Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::post('/attachments', [AttachmentController::class, 'store'])->name('attachments.store');
 
     Route::get('/jobs/create', [JobPostController::class, 'create'])->name('jobs.create');
     Route::post('/jobs', [JobPostController::class, 'store'])->name('jobs.store');
     Route::post('/jobs/{job}/quotes', [QuoteController::class, 'store'])->name('quotes.store');
+    Route::patch('/quotes/{quote}', [QuoteController::class, 'update'])->name('quotes.update');
     Route::post('/quotes/{quote}/accept', [QuoteController::class, 'accept'])->name('quotes.accept');
+    Route::post('/quotes/{quote}/decline', [QuoteController::class, 'decline'])->name('quotes.decline');
 
     Route::get('/work-orders', [WorkOrderController::class, 'index'])->name('work-orders.index');
     Route::get('/work-orders/{workOrder}', [WorkOrderController::class, 'show'])->name('work-orders.show');
     Route::patch('/work-orders/{workOrder}/transition', [WorkOrderController::class, 'transition'])->name('work-orders.transition');
+    Route::post('/work-orders/{workOrder}/messages', [WorkOrderMessageController::class, 'store'])->name('work-order-messages.store');
     Route::post('/work-orders/{workOrder}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::post('/work-orders/{workOrder}/disputes', [DisputeController::class, 'store'])->name('disputes.store');
     Route::get('/disputes/{dispute}', [DisputeController::class, 'show'])->name('disputes.show');
+    Route::post('/disputes/{dispute}/votes', [DisputeVoteController::class, 'store'])->name('dispute-votes.store');
+
+    Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
 });
 
 Route::get('/providers', [ProviderProfileController::class, 'index'])->name('providers.index');

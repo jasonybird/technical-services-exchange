@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
@@ -17,6 +18,18 @@ class WorkOrder extends Model
     public const STATUSES = [
         'assigned', 'en_route', 'on_site', 'in_progress', 'completed',
         'buyer_approved', 'disputed', 'closed', 'cancelled',
+    ];
+
+    public const ALLOWED_TRANSITIONS = [
+        'assigned' => ['en_route', 'cancelled', 'disputed'],
+        'en_route' => ['on_site', 'cancelled', 'disputed'],
+        'on_site' => ['in_progress', 'completed', 'disputed'],
+        'in_progress' => ['completed', 'disputed'],
+        'completed' => ['buyer_approved', 'disputed'],
+        'buyer_approved' => ['closed', 'disputed'],
+        'disputed' => ['closed'],
+        'closed' => [],
+        'cancelled' => [],
     ];
 
     protected function casts(): array
@@ -60,5 +73,20 @@ class WorkOrder extends Model
     public function disputes(): HasMany
     {
         return $this->hasMany(Dispute::class);
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(WorkOrderMessage::class);
+    }
+
+    public function attachments(): MorphMany
+    {
+        return $this->morphMany(Attachment::class, 'attachable');
+    }
+
+    public function canTransitionTo(string $status): bool
+    {
+        return in_array($status, self::ALLOWED_TRANSITIONS[$this->status] ?? [], true);
     }
 }

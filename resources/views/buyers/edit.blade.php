@@ -15,5 +15,12 @@
             <label class="flex gap-2 text-sm"><input type="checkbox" name="public_contact" value="1" @checked($profile?->public_contact)> Show contact details publicly</label>
             <x-primary-button>Save buyer profile</x-primary-button>
         </form>
+        @if ($profile)
+            <section class="mt-6 rounded border bg-white p-6">
+                <h3 class="font-semibold">Company photos and files</h3>
+                <x-attachments :attachments="$profile->attachments" />
+                <x-attachment-form type="buyer_profile" :id="$profile->id" kind="profile" />
+            </section>
+        @endif
     </div>
 </x-app-layout>

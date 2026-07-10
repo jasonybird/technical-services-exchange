@@ -12,7 +12,7 @@ class SocialPostController extends Controller
     public function index(): View
     {
         return view('feed.index', [
-            'posts' => SocialPost::with('user')->latest()->paginate(20),
+            'posts' => SocialPost::with('user', 'attachments', 'comments.user')->latest()->paginate(20),
         ]);
     }
 

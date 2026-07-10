@@ -10,6 +10,12 @@
                 <div><dt class="text-sm text-gray-500">Deliverables</dt><dd class="whitespace-pre-line">{{ $job->deliverables }}</dd></div>
                 <div><dt class="text-sm text-gray-500">Payment terms</dt><dd class="whitespace-pre-line">{{ $job->payment_terms }}</dd></div>
             </dl>
+            <x-attachments :attachments="$job->attachments" />
+            @auth
+                @if (auth()->id() === $job->buyer_id)
+                    <x-attachment-form type="job_post" :id="$job->id" kind="job" />
+                @endif
+            @endauth
         </section>
         @auth
             @role('provider')
@@ -33,11 +39,33 @@
                     <p class="font-semibold">{{ $quote->provider->providerProfile?->business_name ?? $quote->provider->name }}</p>
                     <p class="text-sm text-gray-600">{{ $quote->status }} | {{ $quote->rate_summary }} | {{ $quote->requested_amount }}</p>
                     <p class="mt-2 whitespace-pre-line text-sm">{{ $quote->message }}</p>
+                    @if ($quote->revisions->count())
+                        <details class="mt-3 text-sm">
+                            <summary class="cursor-pointer font-semibold">Revision history</summary>
+                            @foreach ($quote->revisions as $revision)
+                                <p class="mt-2 text-gray-600">{{ $revision->created_at->diffForHumans() }} | {{ $revision->action }} | {{ $revision->rate_summary }} | {{ $revision->requested_amount }}</p>
+                            @endforeach
+                        </details>
+                    @endif
                     @auth
+                        @if (auth()->id() === $quote->provider_id && in_array($quote->status, ['submitted', 'countered', 'revised'], true) && $job->status === 'open')
+                            <form method="POST" action="{{ route('quotes.update', $quote) }}" class="mt-4 space-y-3 rounded bg-gray-50 p-3">
+                                @csrf @method('PATCH')
+                                <x-field name="requested_amount" label="Revised amount" type="number" :value="$quote->requested_amount" />
+                                <x-field name="rate_summary" label="Rate summary" :value="$quote->rate_summary" />
+                                <x-field name="message" label="Message" :value="$quote->message" textarea />
+                                <x-field name="terms" label="Terms" :value="$quote->terms" textarea />
+                                <x-primary-button>Revise quote</x-primary-button>
+                            </form>
+                        @endif
                         @if (auth()->id() === $job->buyer_id && $job->status === 'open')
-                            <form method="POST" action="{{ route('quotes.accept', $quote) }}" class="mt-3">
+                            <form method="POST" action="{{ route('quotes.accept', $quote) }}" class="mt-3 inline-block">
                                 @csrf
                                 <x-primary-button>Accept quote</x-primary-button>
+                            </form>
+                            <form method="POST" action="{{ route('quotes.decline', $quote) }}" class="mt-3 inline-block">
+                                @csrf
+                                <x-secondary-button>Decline</x-secondary-button>
                             </form>
                         @endif
                     @endauth
@@ -49,5 +77,23 @@
         @if ($job->workOrder)
             <a class="rounded bg-gray-900 px-4 py-2 text-white" href="{{ route('work-orders.show', $job->workOrder) }}">View work order</a>
         @endif
+        <section class="rounded border bg-white p-6">
+            <h3 class="font-semibold">Discussion</h3>
+            @auth
+                <form method="POST" action="{{ route('comments.store') }}" class="mt-4 space-y-3">
+                    @csrf
+                    <input type="hidden" name="commentable_type" value="job_post">
+                    <input type="hidden" name="commentable_id" value="{{ $job->id }}">
+                    <x-field name="body" label="Comment" textarea />
+                    <x-primary-button>Comment</x-primary-button>
+                </form>
+            @endauth
+            @foreach ($job->comments as $comment)
+                <div class="mt-3 rounded bg-gray-50 p-3 text-sm">
+                    <p class="font-semibold">{{ $comment->user->name }}</p>
+                    <p class="whitespace-pre-line">{{ $comment->body }}</p>
+                </div>
+            @endforeach
+        </section>
     </div>
 </x-app-layout>

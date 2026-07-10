@@ -12,7 +12,7 @@ class JobPostController extends Controller
     public function index(): View
     {
         return view('jobs.index', [
-            'jobs' => JobPost::with('buyer.buyerProfile')->latest()->paginate(20),
+            'jobs' => JobPost::with('buyer.buyerProfile', 'attachments')->latest()->paginate(20),
         ]);
     }
 
@@ -50,7 +50,14 @@ class JobPostController extends Controller
     public function show(JobPost $job): View
     {
         return view('jobs.show', [
-            'job' => $job->load('buyer.buyerProfile', 'quotes.provider.providerProfile', 'workOrder'),
+            'job' => $job->load(
+                'buyer.buyerProfile',
+                'quotes.provider.providerProfile',
+                'quotes.revisions.user',
+                'workOrder',
+                'attachments',
+                'comments.user'
+            ),
         ]);
     }
 }

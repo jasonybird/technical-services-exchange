@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\JobPost;
 use App\Models\Quote;
 use App\Models\WorkOrder;
+use App\Notifications\ExchangeEventNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -23,12 +24,78 @@ class QuoteController extends Controller
             'terms' => ['nullable', 'string'],
         ]);
 
-        $job->quotes()->create($data + [
+        $quote = $job->quotes()->create($data + [
             'provider_id' => $request->user()->id,
             'status' => 'submitted',
         ]);
 
+        $quote->revisions()->create($data + [
+            'user_id' => $request->user()->id,
+            'action' => 'submitted',
+        ]);
+
+        $job->buyer->notify(new ExchangeEventNotification(
+            'New quote received',
+            $request->user()->name.' submitted a quote for '.$job->title.'.',
+            route('jobs.show', $job),
+            'quote_submitted'
+        ));
+
         return redirect()->route('jobs.show', $job)->with('status', 'Quote submitted.');
+    }
+
+    public function update(Request $request, Quote $quote): RedirectResponse
+    {
+        $quote->load('jobPost');
+
+        abort_unless($quote->provider_id === $request->user()->id, 403);
+        abort_unless(in_array($quote->status, ['submitted', 'countered', 'revised'], true), 422);
+        abort_unless($quote->jobPost->status === 'open', 422);
+
+        $data = $request->validate([
+            'requested_amount' => ['nullable', 'numeric', 'min:0'],
+            'rate_summary' => ['nullable', 'string', 'max:255'],
+            'message' => ['nullable', 'string'],
+            'terms' => ['nullable', 'string'],
+        ]);
+
+        $quote->update($data + ['status' => 'revised']);
+        $quote->revisions()->create($data + [
+            'user_id' => $request->user()->id,
+            'action' => 'revised',
+        ]);
+
+        $quote->jobPost->buyer->notify(new ExchangeEventNotification(
+            'Quote revised',
+            $request->user()->name.' revised a quote for '.$quote->jobPost->title.'.',
+            route('jobs.show', $quote->jobPost),
+            'quote_revised'
+        ));
+
+        return redirect()->route('jobs.show', $quote->jobPost)->with('status', 'Quote revised.');
+    }
+
+    public function decline(Request $request, Quote $quote): RedirectResponse
+    {
+        $quote->load('jobPost');
+
+        abort_unless($quote->jobPost->buyer_id === $request->user()->id, 403);
+        abort_unless($quote->jobPost->status === 'open', 422);
+
+        $quote->update(['status' => 'declined']);
+        $quote->revisions()->create([
+            'user_id' => $request->user()->id,
+            'action' => 'declined',
+        ]);
+
+        $quote->provider->notify(new ExchangeEventNotification(
+            'Quote declined',
+            $quote->jobPost->buyer->name.' declined your quote for '.$quote->jobPost->title.'.',
+            route('jobs.show', $quote->jobPost),
+            'quote_declined'
+        ));
+
+        return redirect()->route('jobs.show', $quote->jobPost)->with('status', 'Quote declined.');
     }
 
     public function accept(Request $request, Quote $quote): RedirectResponse
@@ -39,6 +106,10 @@ class QuoteController extends Controller
         abort_unless($quote->jobPost->status === 'open', 422);
 
         $quote->update(['status' => 'accepted']);
+        $quote->revisions()->create([
+            'user_id' => $request->user()->id,
+            'action' => 'accepted',
+        ]);
         $quote->jobPost->quotes()->whereKeyNot($quote->id)->update(['status' => 'declined']);
         $quote->jobPost->update(['status' => 'assigned']);
 
@@ -56,6 +127,13 @@ class QuoteController extends Controller
                 'at' => now()->toIso8601String(),
             ]],
         ]);
+
+        $quote->provider->notify(new ExchangeEventNotification(
+            'Quote accepted',
+            $quote->jobPost->buyer->name.' accepted your quote for '.$quote->jobPost->title.'.',
+            route('work-orders.show', $workOrder),
+            'quote_accepted'
+        ));
 
         return redirect()->route('work-orders.show', $workOrder)->with('status', 'Quote accepted and work order created.');
     }

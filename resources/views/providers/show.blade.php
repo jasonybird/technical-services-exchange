@@ -12,6 +12,7 @@
                 <div><dt class="text-sm text-gray-500">Rate card</dt><dd class="whitespace-pre-line">{{ $profile->rate_card }}</dd></div>
                 <div><dt class="text-sm text-gray-500">Travel policy</dt><dd class="whitespace-pre-line">{{ $profile->travel_policy }}</dd></div>
             </dl>
+            <x-attachments :attachments="$profile->attachments" />
         </section>
         <section class="rounded border bg-white p-6">
             <h3 class="font-semibold">External profile history</h3>

@@ -32,6 +32,7 @@ cp .env.example .env
 php artisan key:generate
 touch database/database.sqlite
 php artisan migrate:fresh --seed
+php artisan storage:link
 npm run build
 php artisan serve --host=0.0.0.0 --port=8123
 ```
@@ -59,11 +60,23 @@ npm run build
 3. Social layer: community feed posts.
 4. Job posts: buyer job-post creation and listing.
 5. Quote flow: provider quotes and buyer acceptance.
-6. Work orders: assignment, status transitions, deliverables, completion notes.
-7. Reviews: mutual buyer/provider reviews.
-8. Disputes: peer-review dispute records.
-9. API prep: Sanctum installed with starter API routes.
-10. Hardening: tests, seed data, setup docs, and no-payment/no-rate-setting guardrails.
+6. Work orders: assignment, role-aware status transitions, deliverables, messages, evidence files, completion notes.
+7. Reviews: mutual buyer/provider reviews with category metrics.
+8. Disputes: peer-review dispute records with comments, evidence files, and structured votes.
+9. API prep: Sanctum installed with starter API routes and authenticated work-order/dispute feeds.
+10. Hardening: tests, seed data, setup docs, database notifications, admin overview, and no-payment/no-rate-setting guardrails.
+
+## Implemented Hardening Pass
+
+- Polymorphic attachments for provider profiles, buyer profiles, feed posts, jobs, work orders, disputes, and imported external profiles.
+- Polymorphic comments for feed posts, jobs, and disputes.
+- Work-order messages between buyer and provider.
+- Quote revision history and quote decline flow.
+- Role-aware work-order transition rules.
+- Category review metrics for communication, scope accuracy, payment reliability, workmanship, and timeliness.
+- Dispute peer votes with provider/buyer/split/insufficient-evidence recommendations.
+- Database notifications for quote, work-order, review, and dispute events.
+- Admin overview page for users, jobs, work orders, disputes, and attachment counts.
 
 ## External Profile Imports
 
