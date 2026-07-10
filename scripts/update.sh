@@ -10,6 +10,7 @@ composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 npm ci
 npm run build
 php artisan migrate --force
+php artisan storage:link || true
 php artisan optimize:clear
 php artisan optimize
 

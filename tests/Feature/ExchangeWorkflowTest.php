@@ -251,6 +251,57 @@ class ExchangeWorkflowTest extends TestCase
         $this->assertDatabaseHas('dispute_votes', ['recommendation' => 'split']);
     }
 
+    public function test_attachment_uploads_follow_storage_policy_and_can_be_deleted(): void
+    {
+        Storage::fake('public');
+        config()->set('provider-exchange.attachments.disk', 'public');
+        config()->set('provider-exchange.attachments.root', 'test-assets');
+        config()->set('provider-exchange.attachments.max_kb', 1024);
+        config()->set('provider-exchange.attachments.allowed_mime_types', ['image/jpeg', 'image/png']);
+
+        $provider = $this->userWithRole('provider');
+        $profile = $provider->providerProfile()->create(['business_name' => 'Asset Provider']);
+
+        $this->actingAs($provider)->post('/attachments', [
+            'attachable_type' => 'provider_profile',
+            'attachable_id' => $profile->id,
+            'kind' => 'profile',
+            'caption' => 'Profile asset',
+            'file' => UploadedFile::fake()->image('profile.jpg'),
+        ])->assertRedirect();
+
+        $attachment = $profile->attachments()->firstOrFail();
+
+        $this->assertSame('public', $attachment->disk);
+        $this->assertStringStartsWith('test-assets/provider-profile/', $attachment->path);
+        Storage::disk('public')->assertExists($attachment->path);
+
+        $this->actingAs($provider)->delete("/attachments/{$attachment->id}")
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('attachments', ['id' => $attachment->id]);
+        Storage::disk('public')->assertMissing($attachment->path);
+    }
+
+    public function test_attachment_upload_rejects_disallowed_mime_types(): void
+    {
+        Storage::fake('public');
+        config()->set('provider-exchange.attachments.allowed_mime_types', ['image/jpeg']);
+
+        $provider = $this->userWithRole('provider');
+        $profile = $provider->providerProfile()->create(['business_name' => 'Mime Provider']);
+
+        $this->actingAs($provider)->from('/provider-profile')->post('/attachments', [
+            'attachable_type' => 'provider_profile',
+            'attachable_id' => $profile->id,
+            'kind' => 'profile',
+            'file' => UploadedFile::fake()->create('payload.zip', 1, 'application/zip'),
+        ])->assertRedirect('/provider-profile')
+            ->assertSessionHasErrors('file');
+
+        $this->assertDatabaseCount('attachments', 0);
+    }
+
     public function test_everything_rating_layer_accepts_profile_and_work_order_ratings(): void
     {
         [$buyer, $provider, $workOrder] = $this->workOrderFixture();

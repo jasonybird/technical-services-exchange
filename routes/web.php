@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/feed', [SocialPostController::class, 'store'])->name('feed.store');
     Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
     Route::post('/attachments', [AttachmentController::class, 'store'])->name('attachments.store');
+    Route::delete('/attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
     Route::post('/ratings', [RatingController::class, 'store'])->name('ratings.store');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

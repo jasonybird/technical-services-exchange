@@ -13,6 +13,7 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 - Quote revisions, quote decline flow, and quote acceptance.
 - Work-order creation from accepted quotes.
 - Work-order status transitions, messages, attachments, deliverables, and completion notes.
+- Configurable attachment storage policy with upload root, disk, size cap, MIME allowlist, image previews, file metadata, and deletion.
 - Mutual reviews with category metrics.
 - Peer-review disputes with comments, evidence, structured recommendations, and public vote breakdowns.
 - Universal community ratings for buyers, providers, job posts, work orders, and disputes.
@@ -35,15 +36,17 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 
 1. Profile depth: richer galleries, equipment lists, certifications, insurance fields, service coverage maps, and imported review summaries.
 2. Directory quality: saved searches, better filtering, profile badges, availability signals, and stronger buyer/provider discovery pages.
-3. Work-order depth: checklist templates, required evidence rules, appointment windows, onsite timestamps, change-request records, and print/PDF export for work-order packets.
-4. Reputation refinement: rating category definitions, anti-abuse controls, edit windows, report flows, and moderation views.
-5. Dispute workflow: better evidence timelines, reason-coded votes, quorum/visibility rules, and admin/community moderation tools.
-6. Notifications: channel preferences, email templates, and event-specific subscription controls.
-7. API/mobile prep: token-scoped endpoints, versioned API resources, geolocation check-in groundwork, and mobile-safe work-order actions.
-8. Import tooling: guided manual imports for Field Nation, WorkMarket, and similar profile/review history.
-9. Admin operations: audit logs, queue health, system status, content moderation, and backup/export workflows.
-10. Deployment hardening: production environment docs, queue worker setup, scheduler setup, storage policy, and server provisioning notes.
-11. License and runtime audit: generate and review PHP and JavaScript dependency license reports before adding external theme kits, map any risky package to a replacement, and keep required local/runtime extensions such as `pdo_sqlite` documented for testability.
+3. Asset and storage management: configurable upload roots, file policy, attachment previews, deletion, and update-path storage link handling.
+4. Work-order depth: checklist templates, required evidence rules, appointment windows, onsite timestamps, change-request records, and print/PDF export for work-order packets.
+5. Reputation refinement: rating category definitions, anti-abuse controls, edit windows, report flows, and moderation views.
+6. Dispute workflow: better evidence timelines, reason-coded votes, quorum/visibility rules, and admin/community moderation tools.
+7. Notifications: channel preferences, email templates, and event-specific subscription controls.
+8. API/mobile prep: token-scoped endpoints, versioned API resources, geolocation check-in groundwork, and mobile-safe work-order actions.
+9. Import tooling: guided manual imports for Field Nation, WorkMarket, and similar profile/review history.
+10. Competency tags and levels: provider/buyer tag taxonomies, smart-hands entry lane, specialty tags such as network, POTS, POS, AV, cabling, installer, and troubleshooter, plus earned level badges based on completed work and reputation signals.
+11. Admin operations: audit logs, queue health, system status, content moderation, and backup/export workflows.
+12. Deployment hardening: production environment docs, queue worker setup, scheduler setup, storage policy, and server provisioning notes.
+13. License and runtime audit: generate and review PHP and JavaScript dependency license reports before adding external theme kits, map any risky package to a replacement, and keep required local/runtime extensions such as `pdo_sqlite` documented for testability.
 
 ## Scaling Risks To Track
 
@@ -52,6 +55,7 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 - Notifications should move from the database queue to Redis-backed queues before high-volume alerting or email delivery.
 - Sessions, cache, and queues should move to Redis before running more than one web node.
 - Uploaded evidence, profile images, and deliverable files should move to shared or object storage before multi-server deployment.
+- Attachment records already track disk/path metadata, but production scaling still needs object-storage lifecycle rules, upload malware scanning, quota policy, and thumbnail generation.
 - Work-order timelines, dispute activity, messages, and notification tables need careful indexes before large production use.
 - Realtime chat, websocket presence, mobile push, and geolocation check-ins should be added as deliberate service layers instead of bolted onto normal page requests.
 - Background imports, image processing, moderation summaries, and reputation recalculation should run through queue workers rather than web requests.
@@ -65,3 +69,4 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 - Real-time chat/websocket presence.
 - Marketplace-wide dispute binding beyond voluntary community reputation.
 - Automated scraping of third-party platforms where authentication, terms, or privacy boundaries are unclear.
+- Automated competency promotion rules beyond transparent, reviewable tag and level signals.

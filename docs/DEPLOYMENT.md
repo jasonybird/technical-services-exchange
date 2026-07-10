@@ -27,6 +27,12 @@ This document records the explicit runtime requirements and server changes for P
   - `storage/`
   - `bootstrap/cache/`
   - the SQLite database file for SQLite test deployments.
+- Public attachment URLs require `php artisan storage:link`; the update script now runs it idempotently.
+- Attachment policy environment variables:
+  - `TSE_ATTACHMENT_DISK`, default `public`.
+  - `TSE_ATTACHMENT_ROOT`, default `attachments`.
+  - `TSE_ATTACHMENT_MAX_KB`, default `10240`.
+  - `TSE_ATTACHMENT_MIME_TYPES`, comma-separated allowlist.
 
 ## Local Test Requirements
 
@@ -71,6 +77,9 @@ Initial test data/runtime:
 - `CACHE_STORE=database`.
 - `QUEUE_CONNECTION=database`.
 - `MAIL_MAILER=log`.
+- `TSE_ATTACHMENT_DISK=public`.
+- `TSE_ATTACHMENT_ROOT=attachments`.
+- `TSE_ATTACHMENT_MAX_KB=10240`.
 
 ## ChristIT Deployment Log
 
