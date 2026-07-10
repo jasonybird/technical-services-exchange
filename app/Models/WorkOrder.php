@@ -117,6 +117,11 @@ class WorkOrder extends Model
         return $this->hasOne(ProviderTagVerification::class);
     }
 
+    public function mobileEvents(): HasMany
+    {
+        return $this->hasMany(WorkOrderMobileEvent::class);
+    }
+
     public function canTransitionTo(string $status): bool
     {
         return in_array($status, self::ALLOWED_TRANSITIONS[$this->status] ?? [], true);

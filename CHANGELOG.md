@@ -20,6 +20,7 @@ This project uses Git as the primary rollback trail. The `.old` convention is re
 - Added Phase 8/9 marketplace matching with a dense available-work board, category/level/safety filters, technician level definitions, normalized taxonomy terms, provider tag assignment, and self-declared evidence-source tracking.
 - Added the guided imported-history wizard with structured work categories, imported endorsements, operational metrics, selected review excerpts, public visibility controls, proof attachments, and admin verification status.
 - Added post-work provider tag verification so buyers can confirm/dispute observed technician level and declared provider tags after completed work orders, with buyer-endorsed tag evidence shown on provider profiles.
+- Added Phase 11A mobile-safe API actions with versioned work-order endpoints, token ability checks, participant authorization, checklist/status/message/evidence/contact/running-late/schedule/dispute actions, mobile event audit records, optional geolocation evidence, API throttling, and baseline security headers.
 - Created the Laravel Provider Exchange prototype with Breeze authentication, seeded demo users, and role support for admins, providers, buyers, and hybrid accounts.
 - Added provider and buyer profile management with service areas, profile details, and external profile snapshot records.
 - Added social posts, buyer job posts, provider quotes, quote revisions, quote decline flow, and buyer quote acceptance.
@@ -41,6 +42,7 @@ This project uses Git as the primary rollback trail. The `.old` convention is re
 - `php artisan test` passed under Windows PHP with 48 tests and 228 assertions after Phase 8/9.
 - `php artisan test` passed under Windows PHP with 49 tests and 239 assertions after the guided imported-history wizard.
 - `php artisan test` passed under Windows PHP with 51 tests and 256 assertions after post-work provider tag verification.
+- `php artisan test` passed under Windows PHP with 55 tests and 285 assertions after Phase 11A mobile API and security hardening.
 - `npm run build` passed with a production Vite build.
 - `https://christit.com/tse/login` loads publicly.
 - Seeded admin login succeeds on `https://christit.com/tse` and reaches `/tse/dashboard`.

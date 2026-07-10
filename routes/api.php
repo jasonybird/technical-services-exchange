@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\WorkOrderActionController;
 use App\Models\Dispute;
 use App\Models\JobPost;
 use App\Models\ProviderProfile;
@@ -15,7 +16,26 @@ Route::get('/jobs', function () {
     return JobPost::with('buyer:id,name')->latest()->paginate(20);
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+    Route::get('/me', function (Request $request) {
+        return $request->user()->load('roles', 'providerProfile', 'buyerProfile')
+            ->setAttribute('unread_notifications_count', $request->user()->unreadNotifications()->count());
+    });
+
+    Route::get('/jobs', [WorkOrderActionController::class, 'availableJobs']);
+    Route::get('/work-orders', [WorkOrderActionController::class, 'index']);
+    Route::get('/work-orders/{workOrder}', [WorkOrderActionController::class, 'show']);
+    Route::patch('/work-orders/{workOrder}/transition', [WorkOrderActionController::class, 'transition']);
+    Route::patch('/work-orders/{workOrder}/checklist', [WorkOrderActionController::class, 'checklist']);
+    Route::post('/work-orders/{workOrder}/messages', [WorkOrderActionController::class, 'message']);
+    Route::post('/work-orders/{workOrder}/evidence', [WorkOrderActionController::class, 'evidence']);
+    Route::post('/work-orders/{workOrder}/contact-events', [WorkOrderActionController::class, 'contactEvent']);
+    Route::post('/work-orders/{workOrder}/running-late', [WorkOrderActionController::class, 'runningLate']);
+    Route::post('/work-orders/{workOrder}/schedule-updates', [WorkOrderActionController::class, 'scheduleUpdate']);
+    Route::post('/work-orders/{workOrder}/disputes', [WorkOrderActionController::class, 'dispute']);
+});
+
+Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/me', function (Request $request) {
         return $request->user()->load('roles', 'providerProfile', 'buyerProfile')
             ->setAttribute('unread_notifications_count', $request->user()->unreadNotifications()->count());

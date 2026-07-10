@@ -26,7 +26,8 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 - Peer-review disputes with comments, evidence, structured recommendations, and public vote breakdowns.
 - Universal community ratings for buyers, providers, job posts, work orders, and disputes.
 - Database notification events and notification inbox.
-- Starter Sanctum API surface for future app clients.
+- Versioned Sanctum API surface for future app clients, including mobile-safe work-order actions, token ability checks, action audit records, and optional geolocation evidence.
+- Baseline API/security hardening with rate limiting and HTTP security headers.
 - MIT license and no-payment/no-rate-setting guardrails.
 
 ## Operating Principles
@@ -58,11 +59,11 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 
 ## Phase Checkpoint
 
-Phases 1-10B have been implemented locally through post-work provider tag verification. The next active planning block is:
+Phases 1-11A have been implemented locally through mobile-safe API actions and baseline security hardening. The next active planning block is:
 
-8. API/mobile prep: token-scoped endpoints, versioned API resources, geolocation check-in groundwork, contact/support failure logging, and mobile-safe work-order actions.
-9. Notification preference UI and event-channel controls.
-10. Admin operations, audit logs, and deployment hardening.
+8. Notification preference UI and event-channel controls.
+9. Admin operations, audit logs, and moderation queues.
+10. Deployment/scaling hardening and UX/accessibility polish.
 
 Work-order safeguards to carry into the next implementation passes:
 
@@ -133,6 +134,16 @@ Post-work provider tag verification completed:
 - Confirmed declared tags upgrade their provider-profile evidence source to `buyer_endorsed`.
 - Provider profiles now show recent completed-work competency evidence separately from imported history and five-star reviews.
 - Providers cannot self-verify their tags from a work order.
+
+Phase 11A mobile API and security hardening completed:
+
+- `/api/v1` now exposes mobile-safe endpoints for available jobs, assigned work orders, work-order detail, status transitions, checklist updates, messages, evidence uploads, contact/support events, running-late notices, schedule-update requests, and dispute opening.
+- API tokens can be scoped by ability: `jobs:read`, `work-orders:read`, `work-orders:write`, `work-orders:upload`, and `disputes:write`.
+- Work-order API actions enforce buyer/provider/admin participant boundaries.
+- Mobile actions write to `work_order_mobile_events` with event type, user, payload, optional coordinates, optional accuracy, and occurred-at timestamp.
+- Geolocation is optional and documented in the API response as work-order evidence only.
+- API routes are throttled through an explicit `api` rate limiter.
+- Application responses include baseline security headers: content-type sniffing protection, same-origin frame policy, strict origin referrer policy, limited permissions policy, and HSTS on secure requests.
 
 Available-work safeguards to carry into directory and job-list phases:
 

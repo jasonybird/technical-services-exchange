@@ -32,7 +32,6 @@ The goal is not to clone Field Nation. The goal is to keep the useful operationa
 - Job posting now has structured scope and support certification fields, but the creation UI should be refined into reusable templates and stronger validation before real marketplace use.
 - Provider and buyer directories use text-based filters instead of normalized category, skill, coverage, remote, rating, and reliability filters.
 - Work-order lists are card-based and lack the dense assigned/available-work table that worked well in Field Nation.
-- Work-order detail now supports contact/support failure logging and first-class change requests, but schedule update requests, running-late records, post-work tag verification, and general report-problem records still need a dedicated workflow.
 - Work-order detail now supports contact/support failure logging, first-class change requests, and post-work provider tag verification; schedule update requests, running-late records, and general report-problem records still need dedicated workflows.
 - Disputes and votes now have reason codes, but quorum rules, visibility rules, and deeper evidence timelines still need a future pass.
 - Reviews exist, but there is no review response, report flow, edit window, moderation queue, category definitions page, or imported/native reputation distinction in the UI.
@@ -541,6 +540,18 @@ Provider-protection rules:
 - Every mobile action should leave an audit trail visible to the provider.
 - Support/contact failures should be as easy to log as check-in.
 
+Implementation status:
+
+- Completed first implementation pass.
+- Added `/api/v1` mobile-safe work-order endpoints behind Sanctum auth and API throttling.
+- Added token ability gates for `jobs:read`, `work-orders:read`, `work-orders:write`, `work-orders:upload`, and `disputes:write`.
+- Added participant authorization on work-order detail and every work-order action.
+- Added mobile actions for status transition, checklist update, message send, evidence upload, contact/support event logging, running-late notice, schedule-update request, and dispute opening.
+- Added `work_order_mobile_events` as an audit trail for mobile actions.
+- Added optional latitude, longitude, accuracy, and occurred-at fields to mobile action records with explicit privacy copy in API payloads.
+- Added baseline HTTP security headers and an explicit `api` rate limiter.
+- Verified with Windows `php artisan test`.
+
 ## Phase 12 - Notification Preferences And Event Channels
 
 Purpose:
@@ -718,10 +729,10 @@ Provider-protection rules:
 
 ## Recommended Immediate Sequence
 
-1. Phase 11A: mobile-safe API endpoints for onsite work-order actions.
-2. Phase 12A: notification preference UI and event-channel controls.
-3. Phase 13A: audit logs and moderation/operations queues.
-4. Phase 14A: deployment/scaling hardening.
+1. Phase 12A: notification preference UI and event-channel controls.
+2. Phase 13A: audit logs and moderation/operations queues.
+3. Phase 14A: deployment/scaling hardening.
+4. Phase 15A: UX polish and accessibility pass.
 
 ## Key Design Commitments
 
