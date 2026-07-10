@@ -74,5 +74,46 @@
                 @endforelse
             </div>
         </section>
+
+        <section class="rounded border bg-white p-6">
+            <h3 class="font-semibold">Imported history verification</h3>
+            <p class="mt-1 text-sm text-gray-600">Imported marketplace history is provider-controlled until an admin verifies selected proof. Verification does not merge imported history into native TSE reputation.</p>
+            <div class="mt-4 space-y-4">
+                @forelse ($importedHistories as $import)
+                    <div class="rounded border bg-gray-50 p-4 text-sm">
+                        <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                                <p class="font-semibold">
+                                    {{ $import->providerProfile->business_name }} | {{ $import->platform }} {{ $import->external_id ? '#'.$import->external_id : '' }}
+                                </p>
+                                <p class="mt-1 text-gray-600">
+                                    {{ \App\Models\ExternalProfileImport::VERIFICATION_STATUSES[$import->verification_status] ?? $import->verification_status }}
+                                    | Rating {{ $import->rating ?? 'n/a' }}
+                                    | Reviews {{ $import->review_count ?? 'n/a' }}
+                                    | Completed {{ $import->completed_jobs ?? 'n/a' }}
+                                    | Proof files {{ $import->attachments->count() }}
+                                </p>
+                                @if ($import->work_categories)
+                                    <p class="mt-2 text-gray-700">Categories: {{ implode(', ', $import->work_categories) }}</p>
+                                @endif
+                            </div>
+                            <form method="POST" action="{{ route('provider-imports.verify', $import) }}" class="grid min-w-72 gap-2">
+                                @csrf
+                                @method('PATCH')
+                                <label class="text-xs font-semibold text-gray-600" for="verification_status_{{ $import->id }}">Verification status</label>
+                                <select id="verification_status_{{ $import->id }}" name="verification_status" class="rounded-md border-gray-300 text-sm">
+                                    <option value="admin_verified">Admin verified</option>
+                                    <option value="needs_more_proof">Needs more proof</option>
+                                    <option value="unverified">Unverified</option>
+                                </select>
+                                <x-primary-button>Save verification</x-primary-button>
+                            </form>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-600">No imported-history records are waiting for verification.</p>
+                @endforelse
+            </div>
+        </section>
     </div>
 </x-app-layout>

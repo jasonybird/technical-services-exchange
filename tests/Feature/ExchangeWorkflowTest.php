@@ -344,14 +344,65 @@ class ExchangeWorkflowTest extends TestCase
         $this->actingAs($provider)->post('/provider-profile/imports', [
             'platform' => 'Field Nation',
             'external_id' => '172-630',
+            'visibility' => 'summary',
             'rating' => 4.9,
             'review_count' => 500,
             'completed_jobs' => 1200,
+            'client_count' => 75,
+            'on_time_rate' => 98,
+            'backout_rate' => 1,
+            'work_categories_text' => "POS installs\nNetwork troubleshooting",
+            'endorsements' => ['communication', 'problem_solving'],
+            'selected_reviews_text' => "Reliable and prepared.\nSolved the issue quickly.",
         ])->assertRedirect('/provider-profile');
 
         $this->assertDatabaseHas('external_profile_imports', [
             'platform' => 'Field Nation',
             'external_id' => '172-630',
+            'visibility' => 'summary',
+            'verification_status' => 'provider_attested',
+        ]);
+
+        $import = $provider->providerProfile->externalImports()->firstOrFail();
+        $this->assertSame(['POS installs', 'Network troubleshooting'], $import->work_categories);
+        $this->assertSame(['communication', 'problem_solving'], $import->endorsements);
+        $this->assertSame(75, $import->operational_metrics['client_count']);
+    }
+
+    public function test_imported_history_visibility_and_admin_verification_work(): void
+    {
+        $provider = $this->userWithRole('provider');
+        $admin = $this->userWithRole('admin');
+        $profile = $provider->providerProfile()->create([
+            'business_name' => 'Import Provider',
+            'profile_visibility' => ['imports' => true],
+        ]);
+
+        $this->actingAs($provider)->post('/provider-profile/imports', [
+            'platform' => 'WorkMarket',
+            'visibility' => 'selected_reviews',
+            'rating' => 4.8,
+            'review_count' => 42,
+            'completed_jobs' => 140,
+            'selected_reviews_text' => 'Trusted for national rollouts.',
+        ])->assertRedirect('/provider-profile');
+
+        $import = $profile->externalImports()->firstOrFail();
+
+        $this->get("/providers/{$profile->id}")
+            ->assertOk()
+            ->assertSee('WorkMarket')
+            ->assertSee('Trusted for national rollouts.')
+            ->assertSee('Provider attested');
+
+        $this->actingAs($admin)->patch("/provider-profile/imports/{$import->id}/verify", [
+            'verification_status' => 'admin_verified',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('external_profile_imports', [
+            'id' => $import->id,
+            'verification_status' => 'admin_verified',
+            'verified_by_id' => $admin->id,
         ]);
     }
 

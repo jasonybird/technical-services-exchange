@@ -481,6 +481,16 @@ Provider-protection rules:
 - Do not publish work-order IDs, addresses, buyer names, or private customer details by default.
 - Imported history should help providers prove experience without exposing sensitive client data.
 
+Implementation status:
+
+- Completed guided manual import first pass.
+- Added import visibility modes for private, summary-only, selected reviews, and public proof attachments.
+- Added imported work categories, endorsements, operational metrics, selected review excerpts, and proof upload support.
+- Added provider-attested/admin-verified/needs-more-proof verification status.
+- Added admin imported-history verification queue.
+- Kept imported history separate from native TSE reputation.
+- Verified with Windows `php artisan test`.
+
 ## Phase 11 - Mobile-Safe Work-Order Actions And API Expansion
 
 Purpose:
@@ -708,10 +718,10 @@ Provider-protection rules:
 ## Recommended Immediate Sequence
 
 1. Post-work provider tag verification: buyer endorsement/disagreement with self-declared level and tags after completed work orders.
-2. Phase 10A: guided imported-history wizard.
-3. Phase 11A: mobile-safe API endpoints for onsite work-order actions.
-4. Phase 12A: notification preference UI and event-channel controls.
-5. Phase 13A: audit logs and moderation/operations queues.
+2. Phase 11A: mobile-safe API endpoints for onsite work-order actions.
+3. Phase 12A: notification preference UI and event-channel controls.
+4. Phase 13A: audit logs and moderation/operations queues.
+5. Phase 14A: deployment/scaling hardening.
 
 ## Key Design Commitments
 

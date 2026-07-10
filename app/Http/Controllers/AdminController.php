@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Attachment;
 use App\Models\Dispute;
+use App\Models\ExternalProfileImport;
 use App\Models\JobPost;
 use App\Models\Review;
 use App\Models\User;
@@ -32,6 +33,11 @@ class AdminController extends Controller
             'reportedReviews' => Review::with('workOrder.jobPost', 'reviewer', 'reviewee', 'reportedBy')
                 ->where('moderation_status', 'reported')
                 ->latest('reported_at')
+                ->limit(10)
+                ->get(),
+            'importedHistories' => ExternalProfileImport::with('providerProfile.user', 'attachments')
+                ->whereIn('verification_status', ['provider_attested', 'needs_more_proof'])
+                ->latest()
                 ->limit(10)
                 ->get(),
         ]);

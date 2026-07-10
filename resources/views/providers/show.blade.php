@@ -94,20 +94,52 @@
         @if ($profile->visible('imports'))
             <section class="tse-panel p-6">
                 <h3 class="font-semibold text-slate-950 dark:text-white">Imported profile and review history</h3>
-                @forelse ($profile->externalImports as $import)
+                @php
+                    $publicImports = $profile->externalImports->filter->publiclyVisible();
+                @endphp
+                @forelse ($publicImports as $import)
                     <div class="mt-4 rounded-md border border-slate-200 p-4 dark:border-slate-800">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <p class="font-semibold text-slate-950 dark:text-white">{{ $import->platform }} {{ $import->external_id ? '#'.$import->external_id : '' }}</p>
-                            <x-badge tone="amber">Imported history</x-badge>
-                            <x-badge tone="slate">{{ $import->status }}</x-badge>
-                        </div>
-                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Imported marketplace history is provider-controlled context. It is separate from native TSE reputation unless independently verified later.</p>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">Rating: {{ $import->rating ?? 'n/a' }} | Reviews: {{ $import->review_count ?? 'n/a' }} | Completed: {{ $import->completed_jobs ?? 'n/a' }}</p>
-                        <p class="mt-2 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">{{ $import->notes }}</p>
-                        <x-attachments :attachments="$import->attachments" />
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p class="font-semibold text-slate-950 dark:text-white">{{ $import->platform }} {{ $import->external_id ? '#'.$import->external_id : '' }}</p>
+                                <x-badge tone="amber">Imported history</x-badge>
+                                <x-badge tone="{{ $import->verification_status === 'admin_verified' ? 'emerald' : 'slate' }}">{{ \App\Models\ExternalProfileImport::VERIFICATION_STATUSES[$import->verification_status] ?? $import->verification_status }}</x-badge>
+                            </div>
+                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Imported marketplace history is provider-controlled context. It is separate from native TSE reputation unless independently verified later.</p>
+                            <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Rating: {{ $import->rating ?? 'n/a' }} | Reviews: {{ $import->review_count ?? 'n/a' }} | Completed: {{ $import->completed_jobs ?? 'n/a' }}</p>
+                            @if ($import->operational_metrics)
+                                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                                    Clients: {{ $import->operational_metrics['client_count'] ?? 'n/a' }}
+                                    | On-time: {{ $import->operational_metrics['on_time_rate'] ?? 'n/a' }}%
+                                    | Backout: {{ $import->operational_metrics['backout_rate'] ?? 'n/a' }}%
+                                </p>
+                            @endif
+                            @if ($import->work_categories)
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    @foreach ($import->work_categories as $category)
+                                        <x-badge tone="sky">{{ $category }}</x-badge>
+                                    @endforeach
+                                </div>
+                            @endif
+                            @if ($import->endorsements)
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    @foreach ($import->endorsements as $endorsement)
+                                        <x-badge tone="emerald">{{ str_replace('_', ' ', $endorsement) }}</x-badge>
+                                    @endforeach
+                                </div>
+                            @endif
+                            @if ($import->canShowSelectedReviews() && $import->selected_reviews)
+                                <div class="mt-3 space-y-2">
+                                    @foreach ($import->selected_reviews as $review)
+                                        <p class="rounded-md bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-950 dark:text-slate-300">{{ $review }}</p>
+                                    @endforeach
+                                </div>
+                            @endif
+                            @if ($import->canShowProofAttachments())
+                                <x-attachments :attachments="$import->attachments" />
+                            @endif
                     </div>
                 @empty
-                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">No external profile snapshots yet.</p>
+                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">No public imported-history summaries yet.</p>
                 @endforelse
             </section>
         @endif

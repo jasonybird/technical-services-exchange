@@ -19,6 +19,7 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 - Dense available-work board with filters for category, technician level, scope clarity, support certification, remote eligibility, and risk suppression.
 - Normalized starter taxonomy for work categories, specialties, skills, tools, certifications, and provider tag evidence sources.
 - Explicit technician level ladder from smart hands through project lead.
+- Guided imported-history records for Field Nation, WorkMarket, and similar platforms with privacy controls, selected review excerpts, metrics, proof attachments, and admin verification status.
 - Configurable attachment storage policy with upload root, disk, size cap, MIME allowlist, image previews, file metadata, and deletion.
 - Mutual reviews with category metrics.
 - Peer-review disputes with comments, evidence, structured recommendations, and public vote breakdowns.
@@ -56,11 +57,11 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 
 ## Phase Checkpoint
 
-Phases 1-9 have been implemented locally through the combined Phase 8/9 marketplace matching pass. The next active planning block is:
+Phases 1-10A have been implemented locally through the guided imported-history pass. The next active planning block is:
 
 8. API/mobile prep: token-scoped endpoints, versioned API resources, geolocation check-in groundwork, contact/support failure logging, and mobile-safe work-order actions.
-9. Import tooling: guided manual imports for Field Nation, WorkMarket, and similar profile/review history.
-10. Post-work verification: buyer endorsement or disagreement with provider level/tags after completed work orders, earned evidence upgrades, and transparent tag history.
+9. Post-work verification: buyer endorsement or disagreement with provider level/tags after completed work orders, earned evidence upgrades, and transparent tag history.
+10. Notification preference UI and event-channel controls.
 
 Work-order safeguards to carry into the next implementation passes:
 
@@ -113,6 +114,16 @@ Phase 8/9 implementation completed:
 - Provider profiles can declare a maximum technician level and self-declared taxonomy tags.
 - Provider directory filters can match technician level and taxonomy tags.
 - Taxonomy tag pivots track an evidence source, currently `self_declared`, with room for buyer endorsed, completed work, certification verified, and admin verified evidence.
+
+Guided imported-history implementation completed:
+
+- Provider profile editing now includes a guided manual import wizard for Field Nation, WorkMarket, and similar platforms.
+- Imports can store platform ID, profile URL, rating, review count, completed jobs, client count, on-time rate, backout rate, work categories, imported endorsement categories, selected review excerpts, notes, and proof attachments.
+- Imports have visibility modes: private only, public summary only, public selected reviews, and public proof attachments.
+- Public provider profiles only display imported history according to the selected visibility.
+- Imported history keeps a separate verification status: unverified, provider attested, admin verified, or needs more proof.
+- Admin dashboard includes an imported-history verification queue.
+- Imported history remains separate from native TSE reputation.
 
 Available-work safeguards to carry into directory and job-list phases:
 

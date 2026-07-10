@@ -86,16 +86,69 @@
             </section>
             <form method="POST" action="{{ route('provider-imports.store') }}" class="tse-panel space-y-4 p-6">
                 @csrf
-                <h3 class="font-semibold text-slate-950 dark:text-white">External profile snapshot</h3>
-                <x-field name="platform" label="Platform" value="Field Nation" />
-                <x-field name="external_id" label="External ID" value="172-630" />
-                <x-field name="profile_url" label="Profile URL" />
-                <x-field name="rating" label="Rating" type="number" />
-                <x-field name="review_count" label="Review count" type="number" />
-                <x-field name="completed_jobs" label="Completed jobs" type="number" />
-                <x-field name="notes" label="Notes or copied review summary" textarea />
-                <x-primary-button>Save external snapshot</x-primary-button>
+                <div>
+                    <h3 class="font-semibold text-slate-950 dark:text-white">Guided imported-history wizard</h3>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Manually preserve earned history from Field Nation, WorkMarket, or similar platforms without scraping private systems. Keep client names, addresses, work-order IDs, and sensitive buyer details out of public fields.</p>
+                </div>
+                <div class="grid gap-4 md:grid-cols-3">
+                    <x-field name="platform" label="Platform" value="Field Nation" />
+                    <x-field name="external_id" label="External ID" value="172-630" />
+                    <x-field name="profile_url" label="Profile URL" />
+                    <x-field name="rating" label="Rating" type="number" />
+                    <x-field name="review_count" label="Review count" type="number" />
+                    <x-field name="completed_jobs" label="Completed jobs" type="number" />
+                    <x-field name="client_count" label="Buyer/client count" type="number" />
+                    <x-field name="on_time_rate" label="On-time rate %" type="number" />
+                    <x-field name="backout_rate" label="Backout rate %" type="number" />
+                </div>
+                <div>
+                    <label for="visibility" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Public visibility</label>
+                    <select id="visibility" name="visibility" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                        @foreach (\App\Models\ExternalProfileImport::VISIBILITIES as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <x-field name="work_categories_text" label="Work categories, one per line" textarea help="Examples: POS installs, network troubleshooting, cabling, printers." />
+                <div class="rounded-md border border-slate-200 p-4 dark:border-slate-800">
+                    <h4 class="font-semibold text-slate-950 dark:text-white">Imported endorsement categories</h4>
+                    <div class="mt-3 grid gap-2 md:grid-cols-3">
+                        @foreach (['communication', 'professionalism', 'problem_solving', 'preparedness', 'work_quality', 'responsiveness'] as $endorsement)
+                            <label class="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                                <input type="checkbox" name="endorsements[]" value="{{ $endorsement }}" class="rounded border-slate-300 text-sky-600 shadow-sm focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950">
+                                {{ str_replace('_', ' ', $endorsement) }}
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                <x-field name="selected_reviews_text" label="Selected review excerpts, one per line" textarea help="Only paste short excerpts you are comfortable showing according to the visibility setting." />
+                <x-field name="notes" label="Private notes or summary" textarea />
+                <x-primary-button>Save imported history</x-primary-button>
             </form>
+            <section class="tse-panel p-6">
+                <h3 class="font-semibold text-slate-950 dark:text-white">Saved imported-history records</h3>
+                @forelse ($profile->externalImports as $import)
+                    <div class="mt-4 rounded-md border border-slate-200 p-4 dark:border-slate-800">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <p class="font-semibold text-slate-950 dark:text-white">{{ $import->platform }} {{ $import->external_id ? '#'.$import->external_id : '' }}</p>
+                            <x-badge tone="amber">{{ \App\Models\ExternalProfileImport::VERIFICATION_STATUSES[$import->verification_status] ?? $import->verification_status }}</x-badge>
+                            <x-badge tone="slate">{{ \App\Models\ExternalProfileImport::VISIBILITIES[$import->visibility] ?? $import->visibility }}</x-badge>
+                        </div>
+                        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Rating {{ $import->rating ?? 'n/a' }} | Reviews {{ $import->review_count ?? 'n/a' }} | Completed {{ $import->completed_jobs ?? 'n/a' }}</p>
+                        @if ($import->work_categories)
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                @foreach ($import->work_categories as $category)
+                                    <x-badge tone="sky">{{ $category }}</x-badge>
+                                @endforeach
+                            </div>
+                        @endif
+                        <x-attachments :attachments="$import->attachments" />
+                        <x-attachment-form type="external_profile_import" :id="$import->id" kind="import_proof" />
+                    </div>
+                @empty
+                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">No imported-history records yet.</p>
+                @endforelse
+            </section>
         @endif
     </div>
 </x-app-layout>

@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/provider-profile', [ProviderProfileController::class, 'edit'])->name('providers.edit');
     Route::put('/provider-profile', [ProviderProfileController::class, 'update'])->name('providers.update');
     Route::post('/provider-profile/imports', [ExternalProfileImportController::class, 'store'])->name('provider-imports.store');
+    Route::patch('/provider-profile/imports/{import}/verify', [ExternalProfileImportController::class, 'verify'])->name('provider-imports.verify');
 
     Route::get('/buyer-profile', [BuyerProfileController::class, 'edit'])->name('buyers.edit');
     Route::put('/buyer-profile', [BuyerProfileController::class, 'update'])->name('buyers.update');
