@@ -1,0 +1,53 @@
+# Provider Exchange Roadmap
+
+Provider Exchange is a Laravel application for a provider-centered field-service network. The project should stay open source, avoid rate-setting, avoid payment custody in the first version, and keep reputation mutual between buyers and providers.
+
+## Current Foundation
+
+- Laravel app with Breeze authentication.
+- Role support for admin, provider, buyer, and hybrid users.
+- Seeded demo users for local testing.
+- Provider and buyer profile directories.
+- Community feed posts.
+- Buyer job posts and provider quote submission.
+- Quote revisions, quote decline flow, and quote acceptance.
+- Work-order creation from accepted quotes.
+- Work-order status transitions, messages, attachments, deliverables, and completion notes.
+- Mutual reviews with category metrics.
+- Peer-review disputes with comments, evidence, structured recommendations, and public vote breakdowns.
+- Universal community ratings for buyers, providers, job posts, work orders, and disputes.
+- Database notification events and notification inbox.
+- Starter Sanctum API surface for future app clients.
+- MIT license and no-payment/no-rate-setting guardrails.
+
+## Operating Principles
+
+- Providers and buyers are independent businesses.
+- The platform should not set, recommend, or enforce market rates.
+- Providers should control rate cards and terms.
+- Buyers should control posted offer terms.
+- Payment remains direct between buyer and provider unless a compliant payment partner is deliberately added later.
+- Reputation should be mutual, transparent, and appealable through community review.
+- Dispute voting is a community reputation signal, not legal adjudication.
+
+## Next Build Phases
+
+1. Profile depth: richer galleries, equipment lists, certifications, insurance fields, service coverage maps, and imported review summaries.
+2. Directory quality: saved searches, better filtering, profile badges, availability signals, and stronger buyer/provider discovery pages.
+3. Work-order depth: checklist templates, required evidence rules, appointment windows, onsite timestamps, and change-request records.
+4. Reputation refinement: rating category definitions, anti-abuse controls, edit windows, report flows, and moderation views.
+5. Dispute workflow: better evidence timelines, reason-coded votes, quorum/visibility rules, and admin/community moderation tools.
+6. Notifications: channel preferences, email templates, and event-specific subscription controls.
+7. API/mobile prep: token-scoped endpoints, versioned API resources, geolocation check-in groundwork, and mobile-safe work-order actions.
+8. Import tooling: guided manual imports for Field Nation, WorkMarket, and similar profile/review history.
+9. Admin operations: audit logs, queue health, system status, content moderation, and backup/export workflows.
+10. Deployment hardening: production environment docs, queue worker setup, scheduler setup, storage policy, and server provisioning notes.
+
+## Future/Deferred
+
+- Escrow or payment custody.
+- Automated rate recommendations.
+- Native mobile apps.
+- Real-time chat/websocket presence.
+- Marketplace-wide dispute binding beyond voluntary community reputation.
+- Automated scraping of third-party platforms where authentication, terms, or privacy boundaries are unclear.

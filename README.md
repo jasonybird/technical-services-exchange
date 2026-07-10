@@ -4,6 +4,14 @@ Provider Exchange is an early Laravel prototype for a provider-centered field se
 
 The code is intended to be open source under the MIT License.
 
+Project record keeping lives in:
+
+- `CHANGELOG.md` for shipped changes, verification notes, and unusual commit/history notes.
+- `docs/ROADMAP.md` for the current build direction and deferred features.
+- Git for rollback and branch history.
+
+The `.old` backup convention is not used for routine Laravel edits in this project. Use Git for normal recovery. Create a local `.old` copy only before risky manual rewrites, legacy file replacement, or generated artifact recovery where a second local copy is useful before editing.
+
 The product goal is not to clone Field Nation. The first version focuses on:
 
 - provider and buyer profiles;
@@ -56,6 +64,8 @@ npm run build
 ```
 
 ## Current Roadmap Status
+
+See `docs/ROADMAP.md` for the durable roadmap. The short status below is a convenience snapshot.
 
 1. Foundation: Laravel app, auth, roles, seeded demo users.
 2. Profiles: provider and buyer profiles.
