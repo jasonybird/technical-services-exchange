@@ -1,0 +1,81 @@
+# Deployment Notes
+
+This document records the explicit runtime requirements and server changes for Provider Exchange deployments.
+
+## Required Runtime
+
+- Linux server.
+- Nginx.
+- PHP-FPM with PHP `^8.3`; PHP 8.5 is acceptable for the current Laravel build.
+- PHP extensions required by Laravel and current dependencies:
+  - `ctype`
+  - `curl`
+  - `dom`
+  - `fileinfo`
+  - `filter`
+  - `hash`
+  - `mbstring`
+  - `openssl`
+  - `pdo`
+  - `pdo_sqlite` for the first live test deployment
+  - `session`
+  - `tokenizer`
+  - `xml`
+- Composer for clean production installs, or an uploaded `vendor/` tree for temporary live testing when Composer is unavailable.
+- Node.js/npm only on build machines. The server can receive prebuilt Vite assets in `public/build`.
+- Writable Laravel directories:
+  - `storage/`
+  - `bootstrap/cache/`
+  - the SQLite database file for SQLite test deployments.
+
+## Recommended Production Runtime
+
+- Nginx.
+- PHP-FPM 8.5 or current supported PHP version satisfying Composer constraints.
+- MariaDB/MySQL or PostgreSQL for production data.
+- Redis for cache, session, and queue once traffic or notifications grow.
+- Supervisor or systemd units for Laravel queue workers.
+- Cron entry for `php artisan schedule:run`.
+- Shared/object storage before multi-server deployment.
+
+## ChristIT Test Deployment
+
+Target URL:
+
+- `https://christit.com/tse`
+
+Chosen deployment shape:
+
+- Subdirectory deployment under the existing `christit.com` certificate.
+- App code path: `/sites/provider-exchange`.
+- Public web root exposed through Nginx should be `/sites/provider-exchange/public` only.
+- Existing PHP-FPM socket should be reused: `/run/php/php8.5-fpm.sock`.
+- Do not install or switch PHP 8.3 unless PHP 8.5 proves incompatible.
+- Do not alter the existing generic PHP handling for the rest of `christit.com`.
+- Add only a narrow `/tse` Nginx location and related PHP handler.
+
+Initial test data/runtime:
+
+- SQLite database at `/sites/provider-exchange/database/database.sqlite`.
+- `APP_URL=https://christit.com/tse`.
+- `ASSET_URL=https://christit.com/tse`.
+- `SESSION_PATH=/tse`.
+- `SESSION_DRIVER=database`.
+- `CACHE_STORE=database`.
+- `QUEUE_CONNECTION=database`.
+- `MAIL_MAILER=log`.
+
+## ChristIT Deployment Log
+
+2026-07-10:
+
+- Confirmed remote server uses Nginx and PHP 8.5-FPM.
+- Confirmed `/run/php/php8.5-fpm.sock` exists.
+- Confirmed `tse.christit.com` does not currently resolve and no certificate exists for it.
+- Chose `https://christit.com/tse` as the first live test URL.
+- Uploaded app source to `/home/jbird/provider-exchange-release`.
+- Installed app source into `/sites/provider-exchange`.
+- Remote Composer was not available in noninteractive SSH; uploaded the local `vendor/` tree for this temporary test deployment.
+- No Nginx changes have been applied yet in this deployment pass.
+- No PHP-FPM version changes have been made.
+- No database server changes have been made.

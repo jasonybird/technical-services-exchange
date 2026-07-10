@@ -17,6 +17,7 @@ This project uses Git as the primary rollback trail. The `.old` convention is re
 - Added a universal polymorphic rating layer for provider profiles, buyer profiles, job posts, work orders, and disputes.
 - Added search/filter forms for provider, buyer, and job directories.
 - Added MIT license and first-pass open-source/platform guardrails.
+- Added deployment documentation covering runtime requirements, ChristIT `/tse` deployment assumptions, and remote change tracking.
 
 ### Verified
 
