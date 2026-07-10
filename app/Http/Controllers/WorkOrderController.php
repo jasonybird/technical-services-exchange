@@ -6,6 +6,7 @@ use App\Models\WorkOrder;
 use App\Notifications\ExchangeEventNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\View\View;
 
 class WorkOrderController extends Controller
@@ -43,6 +44,21 @@ class WorkOrderController extends Controller
         ]);
     }
 
+    public function print(Request $request, WorkOrder $workOrder): View
+    {
+        $this->authorizeParticipant($request, $workOrder);
+
+        return view('work-orders.print', [
+            'workOrder' => $workOrder->load(
+                'jobPost',
+                'buyer.buyerProfile',
+                'provider.providerProfile',
+                'acceptedQuote',
+                'attachments',
+            ),
+        ]);
+    }
+
     public function transition(Request $request, WorkOrder $workOrder): RedirectResponse
     {
         $this->authorizeParticipant($request, $workOrder);
@@ -50,6 +66,8 @@ class WorkOrderController extends Controller
         $data = $request->validate([
             'status' => ['required', 'string', 'in:'.implode(',', WorkOrder::STATUSES)],
             'completion_notes' => ['nullable', 'string'],
+            'checklist_completed' => ['nullable', 'array'],
+            'checklist_completed.*' => ['nullable', 'boolean'],
         ]);
 
         $status = $data['status'];
@@ -76,6 +94,10 @@ class WorkOrderController extends Controller
             'status' => $status,
             'status_history' => $history,
             'completion_notes' => $data['completion_notes'] ?? $workOrder->completion_notes,
+            'checklist_completed' => $this->normalizeChecklistCompletion(
+                $workOrder,
+                $data['checklist_completed'] ?? $workOrder->checklistCompleted()
+            ),
         ];
 
         if (isset($timestamps[$status]) && ! $workOrder->{$timestamps[$status]}) {
@@ -96,6 +118,76 @@ class WorkOrderController extends Controller
         ));
 
         return redirect()->route('work-orders.show', $workOrder)->with('status', 'Work order updated.');
+    }
+
+    public function updateDetails(Request $request, WorkOrder $workOrder): RedirectResponse
+    {
+        $this->authorizeParticipant($request, $workOrder);
+        abort_unless($request->user()->id === $workOrder->buyer_id || $request->user()->hasRole('admin'), 403);
+
+        $data = $request->validate([
+            'scheduled_at' => ['nullable', 'date'],
+            'appointment_window' => ['nullable', 'string', 'max:255'],
+            'agreed_terms' => ['nullable', 'string'],
+            'deliverables_checklist' => ['nullable', 'string'],
+            'required_evidence' => ['nullable', 'string'],
+            'evidence_rules' => ['nullable', 'array'],
+            'evidence_rules.*' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $checklistItems = collect(preg_split('/\r\n|\r|\n/', (string) ($data['deliverables_checklist'] ?? '')))
+            ->map(fn (string $item): string => trim($item, " \t\n\r\0\x0B-[]"))
+            ->filter()
+            ->values()
+            ->all();
+
+        $workOrder->update([
+            'scheduled_at' => $data['scheduled_at'] ?? null,
+            'appointment_window' => $data['appointment_window'] ?? null,
+            'agreed_terms' => $data['agreed_terms'] ?? null,
+            'deliverables_checklist' => $data['deliverables_checklist'] ?? null,
+            'checklist_items' => $checklistItems,
+            'checklist_completed' => $this->normalizeChecklistCompletion($workOrder, $workOrder->checklistCompleted(), $checklistItems),
+            'required_evidence' => $data['required_evidence'] ?? null,
+            'evidence_rules' => array_values(array_filter($data['evidence_rules'] ?? [])),
+        ]);
+
+        return redirect()->route('work-orders.show', $workOrder)->with('status', 'Work order details updated.');
+    }
+
+    public function requestChange(Request $request, WorkOrder $workOrder): RedirectResponse
+    {
+        $this->authorizeParticipant($request, $workOrder);
+
+        $data = $request->validate([
+            'summary' => ['required', 'string', 'max:255'],
+            'details' => ['nullable', 'string'],
+        ]);
+
+        $requests = $workOrder->changeRequests();
+        $requests[] = [
+            'summary' => $data['summary'],
+            'details' => $data['details'] ?? null,
+            'requested_by_id' => $request->user()->id,
+            'requested_by_name' => $request->user()->name,
+            'status' => 'open',
+            'requested_at' => now()->toIso8601String(),
+        ];
+
+        $workOrder->update(['change_requests' => $requests]);
+
+        $recipient = $request->user()->id === $workOrder->buyer_id
+            ? $workOrder->provider
+            : $workOrder->buyer;
+
+        $recipient->notify(new ExchangeEventNotification(
+            'Work order change requested',
+            $request->user()->name.' requested a change on '.$workOrder->jobPost->title.'.',
+            route('work-orders.show', $workOrder),
+            'work_order_change_request'
+        ));
+
+        return redirect()->route('work-orders.show', $workOrder)->with('status', 'Change request recorded.');
     }
 
     private function authorizeParticipant(Request $request, WorkOrder $workOrder): void
@@ -122,5 +214,14 @@ class WorkOrderController extends Controller
         } elseif (in_array($status, $sharedStatuses, true)) {
             abort_unless(in_array($userId, [$workOrder->buyer_id, $workOrder->provider_id], true) || $request->user()->hasRole('admin'), 403);
         }
+    }
+
+    private function normalizeChecklistCompletion(WorkOrder $workOrder, array $completed, ?array $items = null): array
+    {
+        $items ??= $workOrder->checklistItems();
+
+        return collect($items)
+            ->mapWithKeys(fn (string $item): array => [$item => (bool) Arr::get($completed, $item, false)])
+            ->all();
     }
 }

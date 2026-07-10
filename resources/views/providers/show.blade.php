@@ -1,32 +1,94 @@
 <x-app-layout>
-    <x-slot name="header"><h2 class="text-xl font-semibold">{{ $profile->business_name }}</h2></x-slot>
-    <div class="mx-auto max-w-5xl space-y-6 p-6">
-        <section class="rounded border bg-white p-6">
-            <p class="text-lg font-semibold">{{ $profile->headline }}</p>
-            <p class="mt-4 whitespace-pre-line">{{ $profile->bio }}</p>
+    <x-slot name="header">
+        <x-page-header
+            title="{{ $profile->business_name }}"
+            :description="$profile->headline"
+        />
+    </x-slot>
+
+    <div class="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+        <section class="tse-panel p-6">
+            <div class="flex flex-wrap gap-2">
+                @if ($profile->service_area)
+                    <x-badge tone="slate">{{ $profile->service_area }}</x-badge>
+                @endif
+                @if ($profile->public_contact)
+                    <x-badge tone="emerald">Public contact</x-badge>
+                @endif
+                @if ($profile->insurance_status)
+                    <x-badge tone="sky">{{ $profile->insurance_status }}</x-badge>
+                @endif
+            </div>
+
+            @if ($profile->visible('bio'))
+                <p class="mt-4 whitespace-pre-line text-slate-700 dark:text-slate-300">{{ $profile->bio }}</p>
+            @endif
+
             <dl class="mt-6 grid gap-4 md:grid-cols-2">
-                <div><dt class="text-sm text-gray-500">Service area</dt><dd>{{ $profile->service_area }}</dd></div>
-                <div><dt class="text-sm text-gray-500">Insurance</dt><dd>{{ $profile->insurance_status }}</dd></div>
-                <div><dt class="text-sm text-gray-500">Skills</dt><dd class="whitespace-pre-line">{{ $profile->skills }}</dd></div>
-                <div><dt class="text-sm text-gray-500">Tools</dt><dd class="whitespace-pre-line">{{ $profile->tools }}</dd></div>
-                <div><dt class="text-sm text-gray-500">Rate card</dt><dd class="whitespace-pre-line">{{ $profile->rate_card }}</dd></div>
-                <div><dt class="text-sm text-gray-500">Travel policy</dt><dd class="whitespace-pre-line">{{ $profile->travel_policy }}</dd></div>
+                @if ($profile->visible('services'))
+                    <div>
+                        <dt class="text-sm text-slate-500 dark:text-slate-400">Services</dt>
+                        <dd class="mt-2 space-y-2">
+                            @forelse ($profile->services ?? [] as $service)
+                                <x-badge tone="sky">{{ $service['name'] }}{{ ! empty($service['level']) ? ' | '.$service['level'] : '' }}</x-badge>
+                            @empty
+                                <span class="text-sm text-slate-600 dark:text-slate-400">{{ $profile->skills }}</span>
+                            @endforelse
+                        </dd>
+                    </div>
+                @endif
+                @if ($profile->visible('tools'))
+                    <div>
+                        <dt class="text-sm text-slate-500 dark:text-slate-400">Tools</dt>
+                        <dd class="mt-2 space-y-2">
+                            @forelse ($profile->tool_inventory ?? [] as $tool)
+                                <x-badge tone="slate">{{ $tool['name'] }}{{ ! empty($tool['category']) ? ' | '.$tool['category'] : '' }}</x-badge>
+                            @empty
+                                <span class="whitespace-pre-line text-sm text-slate-600 dark:text-slate-400">{{ $profile->tools }}</span>
+                            @endforelse
+                        </dd>
+                    </div>
+                @endif
+                @if ($profile->visible('certifications'))
+                    <div>
+                        <dt class="text-sm text-slate-500 dark:text-slate-400">Certifications</dt>
+                        <dd class="mt-2 space-y-2">
+                            @forelse ($profile->certification_records ?? [] as $certification)
+                                <x-badge tone="amber">{{ $certification['name'] }}{{ ! empty($certification['issuer']) ? ' | '.$certification['issuer'] : '' }}</x-badge>
+                            @empty
+                                <span class="whitespace-pre-line text-sm text-slate-600 dark:text-slate-400">{{ $profile->certifications }}</span>
+                            @endforelse
+                        </dd>
+                    </div>
+                @endif
+                @if ($profile->visible('rate_card'))
+                    <div><dt class="text-sm text-slate-500 dark:text-slate-400">Rate card</dt><dd class="whitespace-pre-line text-slate-700 dark:text-slate-300">{{ $profile->rate_card }}</dd></div>
+                @endif
+                @if ($profile->visible('availability'))
+                    <div><dt class="text-sm text-slate-500 dark:text-slate-400">Travel policy</dt><dd class="whitespace-pre-line text-slate-700 dark:text-slate-300">{{ $profile->travel_policy }}</dd></div>
+                    <div><dt class="text-sm text-slate-500 dark:text-slate-400">Availability</dt><dd class="whitespace-pre-line text-slate-700 dark:text-slate-300">{{ $profile->availability_notes }}</dd></div>
+                @endif
             </dl>
+
             <x-attachments :attachments="$profile->attachments" />
             <x-rating-summary :ratings="$profile->ratings" />
             <x-rating-form type="provider_profile" :id="$profile->id" category="provider_overall" />
         </section>
-        <section class="rounded border bg-white p-6">
-            <h3 class="font-semibold">External profile history</h3>
-            @forelse ($profile->externalImports as $import)
-                <div class="mt-4 rounded border p-4">
-                    <p class="font-semibold">{{ $import->platform }} {{ $import->external_id ? '#'.$import->external_id : '' }}</p>
-                    <p class="text-sm text-gray-600">Rating: {{ $import->rating ?? 'n/a' }} | Reviews: {{ $import->review_count ?? 'n/a' }} | Completed: {{ $import->completed_jobs ?? 'n/a' }}</p>
-                    <p class="mt-2 whitespace-pre-line text-sm">{{ $import->notes }}</p>
-                </div>
-            @empty
-                <p class="mt-2 text-sm text-gray-600">No external profile snapshots yet.</p>
-            @endforelse
-        </section>
+
+        @if ($profile->visible('imports'))
+            <section class="tse-panel p-6">
+                <h3 class="font-semibold text-slate-950 dark:text-white">Imported profile and review history</h3>
+                @forelse ($profile->externalImports as $import)
+                    <div class="mt-4 rounded-md border border-slate-200 p-4 dark:border-slate-800">
+                        <p class="font-semibold text-slate-950 dark:text-white">{{ $import->platform }} {{ $import->external_id ? '#'.$import->external_id : '' }}</p>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">Rating: {{ $import->rating ?? 'n/a' }} | Reviews: {{ $import->review_count ?? 'n/a' }} | Completed: {{ $import->completed_jobs ?? 'n/a' }}</p>
+                        <p class="mt-2 whitespace-pre-line text-sm text-slate-700 dark:text-slate-300">{{ $import->notes }}</p>
+                        <x-attachments :attachments="$import->attachments" />
+                    </div>
+                @empty
+                    <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">No external profile snapshots yet.</p>
+                @endforelse
+            </section>
+        @endif
     </div>
 </x-app-layout>

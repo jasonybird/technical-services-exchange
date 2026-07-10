@@ -121,6 +121,14 @@ class QuoteController extends Controller
             'status' => 'assigned',
             'agreed_terms' => trim(($quote->rate_summary ?? '')."\n\n".($quote->terms ?? '')),
             'deliverables_checklist' => $quote->jobPost->deliverables,
+            'scheduled_at' => $quote->jobPost->starts_at,
+            'appointment_window' => $quote->jobPost->time_window,
+            'checklist_items' => collect(preg_split('/\r\n|\r|\n/', (string) $quote->jobPost->deliverables))
+                ->map(fn (string $item): string => trim($item, " \t\n\r\0\x0B-[]"))
+                ->filter()
+                ->values()
+                ->all(),
+            'required_evidence' => $quote->jobPost->deliverables,
             'status_history' => [[
                 'status' => 'assigned',
                 'user_id' => $request->user()->id,

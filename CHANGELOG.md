@@ -14,6 +14,7 @@ This project uses Git as the primary rollback trail. The `.old` convention is re
 - Documented the preferred local-to-GitHub-to-remote-update workflow and the ChristIT conversion from rsync test deploy to Git checkout.
 - Added Phase 2 directory quality improvements with advanced provider/buyer filters, sort controls, profile badges, rating-aware cards, result counts, and empty states.
 - Added Phase 3 asset and storage management with configurable attachment disk/root/size/MIME policy, image previews, file metadata display, attachment deletion, update-script storage linking, and upload policy tests.
+- Added Phase 4 work-order and profile depth with structured work-order setup, checklist completion, evidence rules, change requests, print packets, structured provider services/tools/certifications, structured buyer policies/locations, and public/private profile section controls.
 - Created the Laravel Provider Exchange prototype with Breeze authentication, seeded demo users, and role support for admins, providers, buyers, and hybrid accounts.
 - Added provider and buyer profile management with service areas, profile details, and external profile snapshot records.
 - Added social posts, buyer job posts, provider quotes, quote revisions, quote decline flow, and buyer quote acceptance.

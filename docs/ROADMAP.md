@@ -34,7 +34,7 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 
 ## Next Build Phases
 
-1. Profile depth: richer galleries, equipment lists, certifications, insurance fields, service coverage maps, and imported review summaries.
+1. Profile depth: richer provider galleries for vans, tools, job photos, certifications, insurance, and past work; buyer galleries for company identity, logos, headers, locations, and example work; equipment/tool pickers with reusable tags; certification upload/proof records with starter certification lists; service coverage maps; and imported review summaries.
 2. Directory quality: saved searches, better filtering, profile badges, availability signals, and stronger buyer/provider discovery pages.
 3. Asset and storage management: configurable upload roots, file policy, attachment previews, deletion, and update-path storage link handling.
 4. Work-order depth: checklist templates, required evidence rules, appointment windows, onsite timestamps, change-request records, and print/PDF export for work-order packets.
@@ -70,3 +70,5 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 - Marketplace-wide dispute binding beyond voluntary community reputation.
 - Automated scraping of third-party platforms where authentication, terms, or privacy boundaries are unclear.
 - Automated competency promotion rules beyond transparent, reviewable tag and level signals.
+- Work-order template libraries for buyers and providers, including reusable sample work orders that can seed future jobs.
+- Broader licensed trade profiles, such as electricians, where state certification proof and trade-specific scopes can be added without hard-coding the platform around only IT technicians.

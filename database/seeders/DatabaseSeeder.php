@@ -61,12 +61,34 @@ class DatabaseSeeder extends Seeder
                 'bio' => 'Demo provider profile for the technician-owned exchange.',
                 'service_area' => 'Central US with regional travel',
                 'skills' => "POS\nNetworking\nStructured cabling\nPrinter support",
+                'services' => [
+                    ['name' => 'Smart hands dispatch', 'level' => 'experienced'],
+                    ['name' => 'Network troubleshooting', 'level' => 'advanced'],
+                    ['name' => 'POS installation', 'level' => 'experienced'],
+                ],
                 'tools' => "Laptop\nToner/probe\nCable tester\nBasic hand tools",
+                'tool_inventory' => [
+                    ['name' => 'Laptop', 'category' => 'diagnostics'],
+                    ['name' => 'Toner/probe', 'category' => 'cabling'],
+                    ['name' => 'Cable tester', 'category' => 'network'],
+                ],
                 'certifications' => 'Low-voltage and platform-specific certifications can be listed here.',
+                'certification_records' => [
+                    ['name' => 'Low-voltage certification placeholder', 'issuer' => 'State or authority'],
+                ],
                 'insurance_status' => 'Provider supplied',
                 'rate_card' => "Two-hour minimum\nStandard onsite hourly rate set by provider\nTravel negotiated per job",
                 'travel_policy' => 'Travel terms are negotiated directly with buyers.',
                 'availability_notes' => 'Weekdays and scheduled after-hours work.',
+                'profile_visibility' => [
+                    'bio' => true,
+                    'services' => true,
+                    'tools' => true,
+                    'certifications' => true,
+                    'rate_card' => true,
+                    'availability' => true,
+                    'imports' => true,
+                ],
             ]
         );
 
@@ -87,8 +109,23 @@ class DatabaseSeeder extends Seeder
                 'description' => 'Demo buyer profile showing onboarding and payment terms.',
                 'service_categories' => "Networking\nPOS\nPrinter support",
                 'hiring_regions' => 'Nationwide',
+                'hiring_policies' => [
+                    ['name' => 'Direct vendor onboarding', 'summary' => 'Buyer handles vendor setup outside the platform.'],
+                    ['name' => 'Clear scope required', 'summary' => 'Work orders should include deliverables and evidence requirements.'],
+                ],
+                'locations' => [
+                    ['name' => 'National dispatch', 'region' => 'United States'],
+                ],
                 'vendor_onboarding' => 'Direct vendor onboarding outside the platform.',
                 'payment_terms' => 'Direct payment between buyer and provider.',
+                'profile_visibility' => [
+                    'description' => true,
+                    'categories' => true,
+                    'locations' => true,
+                    'policies' => true,
+                    'payment_terms' => true,
+                    'onboarding' => true,
+                ],
             ]
         );
 
@@ -135,6 +172,11 @@ class DatabaseSeeder extends Seeder
                 'status' => 'assigned',
                 'agreed_terms' => $quote->terms,
                 'deliverables_checklist' => $job->deliverables,
+                'scheduled_at' => $job->starts_at,
+                'appointment_window' => $job->time_window,
+                'checklist_items' => ['Check in', 'Photos', 'Resolution notes'],
+                'required_evidence' => $job->deliverables,
+                'evidence_rules' => ['Arrival photo', 'Completion photo'],
                 'status_history' => [['status' => 'assigned', 'user_id' => $buyer->id, 'at' => now()->toIso8601String()]],
             ]
         );

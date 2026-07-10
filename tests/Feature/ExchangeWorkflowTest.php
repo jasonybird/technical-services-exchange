@@ -96,6 +96,50 @@ class ExchangeWorkflowTest extends TestCase
         $this->assertDatabaseHas('disputes', ['work_order_id' => $workOrder->id, 'summary' => 'Scope changed']);
     }
 
+    public function test_work_order_details_checklist_change_requests_and_print_view_work(): void
+    {
+        [$buyer, $provider, $workOrder] = $this->workOrderFixture();
+
+        $this->actingAs($buyer)->patch("/work-orders/{$workOrder->id}/details", [
+            'scheduled_at' => '2026-07-12 09:00:00',
+            'appointment_window' => '9 AM - 11 AM',
+            'agreed_terms' => 'Two-hour minimum.',
+            'deliverables_checklist' => "Arrival photo\nCable test\nCloseout notes",
+            'required_evidence' => 'Photos and test results required.',
+            'evidence_rules' => ['Arrival photo', 'Completion photo'],
+        ])->assertRedirect("/work-orders/{$workOrder->id}");
+
+        $workOrder->refresh();
+
+        $this->assertSame(['Arrival photo', 'Cable test', 'Closeout notes'], $workOrder->checklistItems());
+        $this->assertSame(['Arrival photo', 'Completion photo'], $workOrder->evidence_rules);
+
+        $this->actingAs($provider)->patch("/work-orders/{$workOrder->id}/transition", [
+            'status' => 'en_route',
+            'checklist_completed' => [
+                'Arrival photo' => '1',
+                'Cable test' => '0',
+            ],
+        ])->assertRedirect("/work-orders/{$workOrder->id}");
+
+        $workOrder->refresh();
+        $this->assertTrue($workOrder->checklist_completed['Arrival photo']);
+        $this->assertFalse($workOrder->checklist_completed['Cable test']);
+
+        $this->actingAs($provider)->post("/work-orders/{$workOrder->id}/change-requests", [
+            'summary' => 'Add second terminal',
+            'details' => 'Buyer requested another POS terminal onsite.',
+        ])->assertRedirect("/work-orders/{$workOrder->id}");
+
+        $this->assertDatabaseHas('work_orders', ['id' => $workOrder->id]);
+        $this->assertSame('Add second terminal', $workOrder->fresh()->changeRequests()[0]['summary']);
+
+        $this->actingAs($buyer)->get("/work-orders/{$workOrder->id}/print")
+            ->assertOk()
+            ->assertSee('Arrival photo')
+            ->assertSee('Print');
+    }
+
     public function test_external_profile_snapshot_can_be_saved(): void
     {
         $provider = $this->userWithRole('provider');
@@ -156,6 +200,41 @@ class ExchangeWorkflowTest extends TestCase
             ->assertDontSee('Beta Fiber Works');
     }
 
+    public function test_provider_profile_saves_structured_services_tools_certifications_and_visibility(): void
+    {
+        $provider = $this->userWithRole('provider');
+
+        $this->actingAs($provider)->put('/provider-profile', [
+            'business_name' => 'Structured Provider',
+            'bio' => 'Public bio.',
+            'services_text' => "Smart hands | entry\nNetwork troubleshooting | advanced",
+            'tool_inventory_text' => "Cable tester | network\nTone probe | cabling",
+            'certification_records_text' => "Low voltage license | Oklahoma\nA+ | CompTIA",
+            'profile_visibility' => [
+                'bio' => '1',
+                'services' => '1',
+                'tools' => '1',
+                'certifications' => '1',
+                'imports' => '1',
+            ],
+            'private_notes' => 'Internal only.',
+        ])->assertRedirect('/provider-profile');
+
+        $profile = $provider->providerProfile()->firstOrFail();
+
+        $this->assertSame('Smart hands', $profile->services[0]['name']);
+        $this->assertSame('network', $profile->tool_inventory[0]['category']);
+        $this->assertSame('CompTIA', $profile->certification_records[1]['issuer']);
+        $this->assertFalse($profile->profile_visibility['rate_card']);
+
+        $this->get("/providers/{$profile->id}")
+            ->assertOk()
+            ->assertSee('Smart hands')
+            ->assertSee('Cable tester')
+            ->assertSee('Low voltage license')
+            ->assertDontSee('Internal only');
+    }
+
     public function test_buyer_directory_can_filter_and_sort_profiles(): void
     {
         $retailBuyer = $this->userWithRole('buyer');
@@ -194,6 +273,36 @@ class ExchangeWorkflowTest extends TestCase
             ->assertSee('Public contact')
             ->assertSee('4/5')
             ->assertDontSee('Beta Warehouse Group');
+    }
+
+    public function test_buyer_profile_saves_structured_hiring_policies_locations_and_visibility(): void
+    {
+        $buyer = $this->userWithRole('buyer');
+
+        $this->actingAs($buyer)->put('/buyer-profile', [
+            'company_name' => 'Structured Buyer',
+            'description' => 'Buyer description.',
+            'hiring_policies_text' => "Direct ACH | Net 15 after approval\nCOI required | Before dispatch",
+            'locations_text' => "Tulsa office | Oklahoma\nDallas office | Texas",
+            'profile_visibility' => [
+                'description' => '1',
+                'locations' => '1',
+                'policies' => '1',
+            ],
+            'private_notes' => 'Buyer internal note.',
+        ])->assertRedirect('/buyer-profile');
+
+        $profile = $buyer->buyerProfile()->firstOrFail();
+
+        $this->assertSame('Direct ACH', $profile->hiring_policies[0]['name']);
+        $this->assertSame('Texas', $profile->locations[1]['region']);
+        $this->assertFalse($profile->profile_visibility['payment_terms']);
+
+        $this->get("/buyers/{$profile->id}")
+            ->assertOk()
+            ->assertSee('Direct ACH')
+            ->assertSee('Tulsa office')
+            ->assertDontSee('Buyer internal note');
     }
 
     public function test_invalid_work_order_transition_is_rejected(): void

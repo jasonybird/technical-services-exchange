@@ -10,11 +10,23 @@ use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
     'user_id', 'business_name', 'headline', 'bio', 'service_area', 'skills',
-    'tools', 'certifications', 'insurance_status', 'rate_card', 'travel_policy',
-    'availability_notes', 'website_url', 'phone', 'public_contact',
+    'services', 'tools', 'tool_inventory', 'certifications', 'certification_records',
+    'insurance_status', 'rate_card', 'travel_policy', 'availability_notes',
+    'website_url', 'phone', 'public_contact', 'profile_visibility', 'private_notes',
 ])]
 class ProviderProfile extends Model
 {
+    protected function casts(): array
+    {
+        return [
+            'services' => 'array',
+            'tool_inventory' => 'array',
+            'certification_records' => 'array',
+            'profile_visibility' => 'array',
+            'public_contact' => 'boolean',
+        ];
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -33,5 +45,12 @@ class ProviderProfile extends Model
     public function ratings(): MorphMany
     {
         return $this->morphMany(Rating::class, 'rateable');
+    }
+
+    public function visible(string $field): bool
+    {
+        $visibility = $this->profile_visibility ?? [];
+
+        return (bool) ($visibility[$field] ?? true);
     }
 }
