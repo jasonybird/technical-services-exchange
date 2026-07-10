@@ -81,6 +81,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/work-orders/{workOrder}/print', [WorkOrderController::class, 'print'])->name('work-orders.print');
     Route::patch('/work-orders/{workOrder}/details', [WorkOrderController::class, 'updateDetails'])->name('work-orders.details');
     Route::post('/work-orders/{workOrder}/change-requests', [WorkOrderController::class, 'requestChange'])->name('work-orders.change-requests');
+    Route::patch('/work-orders/{workOrder}/change-requests/{changeRequest}', [WorkOrderController::class, 'resolveChangeRequest'])->name('work-orders.change-requests.resolve');
+    Route::post('/work-orders/{workOrder}/contact-events', [WorkOrderController::class, 'logContactEvent'])->name('work-orders.contact-events.store');
     Route::patch('/work-orders/{workOrder}/transition', [WorkOrderController::class, 'transition'])->name('work-orders.transition');
     Route::post('/work-orders/{workOrder}/messages', [WorkOrderMessageController::class, 'store'])->name('work-order-messages.store');
     Route::post('/work-orders/{workOrder}/reviews', [ReviewController::class, 'store'])->name('reviews.store');

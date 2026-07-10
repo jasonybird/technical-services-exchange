@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\Model;
     'job_post_id', 'buyer_id', 'provider_id', 'accepted_quote_id', 'status',
     'status_history', 'agreed_terms', 'deliverables_checklist', 'scheduled_at',
     'appointment_window', 'checklist_items', 'checklist_completed', 'required_evidence',
-    'evidence_rules', 'change_requests', 'completion_notes',
+    'evidence_rules', 'scope_snapshot', 'contact_snapshot', 'scope_clarity_status',
+    'risk_flags', 'change_requests', 'completion_notes',
     'en_route_at', 'on_site_at', 'started_at', 'completed_at', 'approved_at', 'closed_at',
 ])]
 class WorkOrder extends Model
@@ -42,6 +43,9 @@ class WorkOrder extends Model
             'checklist_items' => 'array',
             'checklist_completed' => 'array',
             'evidence_rules' => 'array',
+            'scope_snapshot' => 'array',
+            'contact_snapshot' => 'array',
+            'risk_flags' => 'array',
             'change_requests' => 'array',
             'en_route_at' => 'datetime',
             'on_site_at' => 'datetime',
@@ -97,6 +101,16 @@ class WorkOrder extends Model
         return $this->morphMany(Rating::class, 'rateable');
     }
 
+    public function structuredChangeRequests(): HasMany
+    {
+        return $this->hasMany(WorkOrderChangeRequest::class);
+    }
+
+    public function contactEvents(): HasMany
+    {
+        return $this->hasMany(WorkOrderContactEvent::class);
+    }
+
     public function canTransitionTo(string $status): bool
     {
         return in_array($status, self::ALLOWED_TRANSITIONS[$this->status] ?? [], true);
@@ -134,6 +148,54 @@ class WorkOrder extends Model
 
     public function changeRequests(): array
     {
+        $structured = $this->relationLoaded('structuredChangeRequests')
+            ? $this->structuredChangeRequests
+            : $this->structuredChangeRequests()->latest()->get();
+
+        if ($structured->isNotEmpty()) {
+            return $structured
+                ->map(fn (WorkOrderChangeRequest $request): array => [
+                    'id' => $request->id,
+                    'summary' => $request->summary,
+                    'details' => $request->details,
+                    'reason_code' => $request->reason_code,
+                    'reason_label' => WorkOrderChangeRequest::REASON_CODES[$request->reason_code] ?? $request->reason_code,
+                    'scope_impact' => $request->scope_impact,
+                    'schedule_impact' => $request->schedule_impact,
+                    'terms_impact' => $request->terms_impact,
+                    'requested_by_id' => $request->requester_id,
+                    'requested_by_name' => $request->requester?->name,
+                    'status' => $request->status,
+                    'requested_at' => $request->created_at?->toIso8601String(),
+                    'resolution_notes' => $request->resolution_notes,
+                ])
+                ->values()
+                ->all();
+        }
+
         return is_array($this->change_requests) ? array_values($this->change_requests) : [];
+    }
+
+    public function scopeSnapshotValue(string $key): ?string
+    {
+        $snapshot = is_array($this->scope_snapshot) ? $this->scope_snapshot : [];
+
+        return $snapshot[$key] ?? $this->jobPost?->{$key};
+    }
+
+    public function contactSnapshotValue(string $key): ?string
+    {
+        $snapshot = is_array($this->contact_snapshot) ? $this->contact_snapshot : [];
+
+        return $snapshot[$key] ?? $this->jobPost?->{$key};
+    }
+
+    public function contactFailureCount(): int
+    {
+        $events = $this->relationLoaded('contactEvents') ? $this->contactEvents : $this->contactEvents()->get();
+
+        return $events
+            ->whereIn('event_type', ['contact_failed', 'support_unavailable', 'site_contact_unavailable'])
+            ->count();
     }
 }

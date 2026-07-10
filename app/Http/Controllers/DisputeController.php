@@ -30,6 +30,7 @@ class DisputeController extends Controller
 
         $data = $request->validate([
             'summary' => ['required', 'string', 'max:255'],
+            'reason_code' => ['nullable', 'string', 'in:'.implode(',', array_keys(Dispute::REASON_CODES))],
             'claim' => ['required', 'string'],
             'evidence_notes' => ['nullable', 'string'],
         ]);

@@ -18,6 +18,8 @@ This document records the explicit runtime requirements and server changes for P
   - `openssl`
   - `pdo`
   - `pdo_sqlite` for SQLite test deployments and the default automated test suite
+  - `sqlite3` for SQLite-backed local tests
+  - `gd` for generated image upload fixtures and image handling
   - `session`
   - `tokenizer`
   - `xml`
@@ -37,8 +39,9 @@ This document records the explicit runtime requirements and server changes for P
 ## Local Test Requirements
 
 - The default PHPUnit configuration uses an in-memory SQLite database, so whichever PHP runtime executes `php artisan test` must include `pdo_sqlite` and `sqlite3`.
-- On Windows, `php -m` should list both `PDO` and `pdo_sqlite`; otherwise the feature tests fail before reaching app code with `could not find driver`.
-- WSL Ubuntu is acceptable for local verification when Windows PHP is missing SQLite support, as long as WSL PHP has `pdo_sqlite` and `sqlite3`.
+- Upload tests also require `fileinfo` for MIME detection and `gd` for generated image fixtures.
+- On Windows, `php -m` should list `PDO`, `pdo_sqlite`, `sqlite3`, `fileinfo`, and `gd`; otherwise the feature tests fail before reaching app code or upload assertions.
+- WSL Ubuntu is acceptable for local verification when Windows PHP is missing extension support, as long as WSL PHP has the same extensions.
 
 ## Recommended Production Runtime
 

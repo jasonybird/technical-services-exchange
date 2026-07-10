@@ -123,6 +123,10 @@ class QuoteController extends Controller
             'deliverables_checklist' => $quote->jobPost->deliverables,
             'scheduled_at' => $quote->jobPost->starts_at,
             'appointment_window' => $quote->jobPost->time_window,
+            'scope_snapshot' => $quote->jobPost->scopeSnapshot(),
+            'contact_snapshot' => $quote->jobPost->contactSnapshot(),
+            'scope_clarity_status' => $quote->jobPost->scope_clarity_status,
+            'risk_flags' => $quote->jobPost->risk_flags,
             'checklist_items' => collect(preg_split('/\r\n|\r|\n/', (string) $quote->jobPost->deliverables))
                 ->map(fn (string $item): string => trim($item, " \t\n\r\0\x0B-[]"))
                 ->filter()

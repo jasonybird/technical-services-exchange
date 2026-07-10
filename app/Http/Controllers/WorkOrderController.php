@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\WorkOrder;
+use App\Models\WorkOrderChangeRequest;
+use App\Models\WorkOrderContactEvent;
 use App\Notifications\ExchangeEventNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,6 +36,8 @@ class WorkOrderController extends Controller
                 'buyer.buyerProfile',
                 'provider.providerProfile',
                 'acceptedQuote',
+                'structuredChangeRequests.requester',
+                'contactEvents.user',
                 'reviews.reviewer',
                 'reviews.reviewee',
                 'disputes.openedBy',
@@ -54,6 +58,8 @@ class WorkOrderController extends Controller
                 'buyer.buyerProfile',
                 'provider.providerProfile',
                 'acceptedQuote',
+                'structuredChangeRequests.requester',
+                'contactEvents.user',
                 'attachments',
             ),
         ]);
@@ -162,19 +168,22 @@ class WorkOrderController extends Controller
         $data = $request->validate([
             'summary' => ['required', 'string', 'max:255'],
             'details' => ['nullable', 'string'],
+            'reason_code' => ['required', 'string', 'in:'.implode(',', array_keys(WorkOrderChangeRequest::REASON_CODES))],
+            'scope_impact' => ['nullable', 'string'],
+            'schedule_impact' => ['nullable', 'string'],
+            'terms_impact' => ['nullable', 'string'],
         ]);
 
-        $requests = $workOrder->changeRequests();
-        $requests[] = [
+        $changeRequest = $workOrder->structuredChangeRequests()->create([
             'summary' => $data['summary'],
             'details' => $data['details'] ?? null,
-            'requested_by_id' => $request->user()->id,
-            'requested_by_name' => $request->user()->name,
+            'reason_code' => $data['reason_code'],
+            'scope_impact' => $data['scope_impact'] ?? null,
+            'schedule_impact' => $data['schedule_impact'] ?? null,
+            'terms_impact' => $data['terms_impact'] ?? null,
+            'requester_id' => $request->user()->id,
             'status' => 'open',
-            'requested_at' => now()->toIso8601String(),
-        ];
-
-        $workOrder->update(['change_requests' => $requests]);
+        ]);
 
         $recipient = $request->user()->id === $workOrder->buyer_id
             ? $workOrder->provider
@@ -188,6 +197,55 @@ class WorkOrderController extends Controller
         ));
 
         return redirect()->route('work-orders.show', $workOrder)->with('status', 'Change request recorded.');
+    }
+
+    public function resolveChangeRequest(Request $request, WorkOrder $workOrder, WorkOrderChangeRequest $changeRequest): RedirectResponse
+    {
+        $this->authorizeParticipant($request, $workOrder);
+        abort_unless($changeRequest->work_order_id === $workOrder->id, 404);
+        abort_unless($request->user()->id !== $changeRequest->requester_id || $request->user()->hasRole('admin'), 403);
+
+        $data = $request->validate([
+            'status' => ['required', 'string', 'in:accepted,declined,withdrawn'],
+            'resolution_notes' => ['nullable', 'string'],
+        ]);
+
+        $changeRequest->update([
+            'status' => $data['status'],
+            'resolution_notes' => $data['resolution_notes'] ?? null,
+            'responder_id' => $request->user()->id,
+            'responded_at' => now(),
+        ]);
+
+        return redirect()->route('work-orders.show', $workOrder)->with('status', 'Change request updated.');
+    }
+
+    public function logContactEvent(Request $request, WorkOrder $workOrder): RedirectResponse
+    {
+        $this->authorizeParticipant($request, $workOrder);
+        abort_unless($request->user()->id === $workOrder->provider_id || $request->user()->hasRole('admin'), 403);
+
+        $data = $request->validate([
+            'event_type' => ['required', 'string', 'in:'.implode(',', array_keys(WorkOrderContactEvent::EVENT_TYPES))],
+            'attempted_channel' => ['nullable', 'string', 'max:255'],
+            'attempted_at' => ['nullable', 'date'],
+            'result' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $event = $workOrder->contactEvents()->create($data + [
+            'user_id' => $request->user()->id,
+            'attempted_at' => $data['attempted_at'] ?? now(),
+        ]);
+
+        $workOrder->buyer->notify(new ExchangeEventNotification(
+            WorkOrderContactEvent::EVENT_TYPES[$event->event_type] ?? 'Contact event logged',
+            $request->user()->name.' logged '.str_replace('_', ' ', $event->event_type).' on '.$workOrder->jobPost->title.'.',
+            route('work-orders.show', $workOrder),
+            'contact_event'
+        ));
+
+        return redirect()->route('work-orders.show', $workOrder)->with('status', 'Contact/support event logged.');
     }
 
     private function authorizeParticipant(Request $request, WorkOrder $workOrder): void

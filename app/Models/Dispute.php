@@ -9,11 +9,23 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
-    'work_order_id', 'opened_by_id', 'status', 'summary', 'claim', 'response',
+    'work_order_id', 'opened_by_id', 'status', 'summary', 'reason_code', 'claim', 'response',
     'evidence_notes', 'recommended_resolution', 'peer_votes', 'resolved_at',
 ])]
 class Dispute extends Model
 {
+    public const REASON_CODES = [
+        'scope_expansion' => 'Scope expansion',
+        'unreachable_contact' => 'Unreachable contact',
+        'support_unavailable' => 'Support unavailable',
+        'missing_deliverable' => 'Missing deliverable',
+        'payment_issue' => 'Payment issue',
+        'schedule_issue' => 'Schedule issue',
+        'quality_issue' => 'Quality issue',
+        'insufficient_evidence' => 'Insufficient evidence',
+        'other' => 'Other',
+    ];
+
     protected function casts(): array
     {
         return [

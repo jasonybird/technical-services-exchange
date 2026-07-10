@@ -2,6 +2,10 @@
     $progress = $workOrder->checklistProgress();
     $completed = $workOrder->checklistCompleted();
     $evidenceRules = is_array($workOrder->evidence_rules) ? $workOrder->evidence_rules : [];
+    $riskFlags = is_array($workOrder->risk_flags) ? $workOrder->risk_flags : [];
+    $changeReasonCodes = \App\Models\WorkOrderChangeRequest::REASON_CODES;
+    $contactEventTypes = \App\Models\WorkOrderContactEvent::EVENT_TYPES;
+    $disputeReasonCodes = \App\Models\Dispute::REASON_CODES;
 @endphp
 
 <x-app-layout>
@@ -34,6 +38,7 @@
                 <x-stat-card label="Checklist" :value="$progress['done'].'/'.$progress['total']" description="Completed deliverables" />
                 <x-stat-card label="Attachments" :value="$workOrder->attachments->count()" description="Evidence and files" />
                 <x-stat-card label="Changes" :value="count($workOrder->changeRequests())" description="Requested scope changes" />
+                <x-stat-card label="Contact issues" :value="$workOrder->contactFailureCount()" description="Logged support failures" />
             </div>
 
             <div class="mt-6 grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
@@ -52,6 +57,49 @@
                         </div>
                     @endif
                 </div>
+            </div>
+        </section>
+
+        <section class="tse-panel p-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <h3 class="font-semibold text-slate-950 dark:text-white">Scope and support safeguards</h3>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Structured scope governs the work order. Supplemental instructions cannot create undefined onsite obligations.</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <x-badge tone="{{ $workOrder->scope_clarity_status === 'clear' ? 'emerald' : 'amber' }}">Scope {{ str_replace('_', ' ', $workOrder->scope_clarity_status) }}</x-badge>
+                    @if ($workOrder->contactSnapshotValue('contact_certified'))
+                        <x-badge tone="emerald">Support certified</x-badge>
+                    @else
+                        <x-badge tone="rose">Support not certified</x-badge>
+                    @endif
+                </div>
+            </div>
+            @if ($riskFlags)
+                <div class="mt-4 flex flex-wrap gap-2">
+                    @foreach ($riskFlags as $flag)
+                        <x-badge tone="amber">{{ str_replace('_', ' ', $flag) }}</x-badge>
+                    @endforeach
+                </div>
+            @endif
+            <dl class="mt-6 grid gap-4 text-sm md:grid-cols-2">
+                <div><dt class="text-slate-500">Primary objective</dt><dd class="whitespace-pre-line text-slate-800 dark:text-slate-200">{{ $workOrder->scopeSnapshotValue('primary_objective') ?: $workOrder->jobPost->scope }}</dd></div>
+                <div><dt class="text-slate-500">Expected duration</dt><dd class="whitespace-pre-line text-slate-800 dark:text-slate-200">{{ $workOrder->scopeSnapshotValue('expected_duration') ?: 'Not specified' }}</dd></div>
+                <div><dt class="text-slate-500">Included work</dt><dd class="whitespace-pre-line text-slate-800 dark:text-slate-200">{{ $workOrder->scopeSnapshotValue('included_work') ?: 'Not specified' }}</dd></div>
+                <div><dt class="text-slate-500">Excluded work</dt><dd class="whitespace-pre-line text-slate-800 dark:text-slate-200">{{ $workOrder->scopeSnapshotValue('excluded_work') ?: 'Not specified' }}</dd></div>
+                <div><dt class="text-slate-500">Maximum onsite expectations</dt><dd class="whitespace-pre-line text-slate-800 dark:text-slate-200">{{ $workOrder->scopeSnapshotValue('maximum_onsite_expectations') ?: 'Not specified' }}</dd></div>
+                <div><dt class="text-slate-500">Closeout conditions</dt><dd class="whitespace-pre-line text-slate-800 dark:text-slate-200">{{ $workOrder->scopeSnapshotValue('closeout_conditions') ?: 'Not specified' }}</dd></div>
+            </dl>
+            <div class="mt-6 rounded-md border border-slate-200 p-4 dark:border-slate-800">
+                <h4 class="font-semibold text-slate-950 dark:text-white">Certified contact path</h4>
+                <dl class="mt-3 grid gap-4 text-sm md:grid-cols-3">
+                    <div><dt class="text-slate-500">Primary</dt><dd>{{ $workOrder->contactSnapshotValue('primary_contact_name') ?: 'Not set' }}<br>{{ $workOrder->contactSnapshotValue('primary_contact_phone') }} {{ $workOrder->contactSnapshotValue('primary_contact_email') }}</dd></div>
+                    <div><dt class="text-slate-500">Backup</dt><dd>{{ $workOrder->contactSnapshotValue('backup_contact_name') ?: 'Not set' }}<br>{{ $workOrder->contactSnapshotValue('backup_contact_phone') }} {{ $workOrder->contactSnapshotValue('backup_contact_email') }}</dd></div>
+                    <div><dt class="text-slate-500">Dispatch</dt><dd>{{ $workOrder->contactSnapshotValue('dispatch_contact_name') ?: 'Not set' }}<br>{{ $workOrder->contactSnapshotValue('dispatch_contact_phone') }} {{ $workOrder->contactSnapshotValue('dispatch_contact_email') }}</dd></div>
+                    <div><dt class="text-slate-500">Technical bridge</dt><dd>{{ $workOrder->contactSnapshotValue('technical_bridge') ?: 'Not set' }}</dd></div>
+                    <div><dt class="text-slate-500">Escalation</dt><dd>{{ $workOrder->contactSnapshotValue('escalation_contact') ?: 'Not set' }}</dd></div>
+                    <div><dt class="text-slate-500">Support window</dt><dd>{{ $workOrder->contactSnapshotValue('support_availability_window') ?: 'Not set' }}<br>{{ $workOrder->contactSnapshotValue('support_channel') }} {{ $workOrder->contactSnapshotValue('support_expected_response_time') }}</dd></div>
+                </dl>
             </div>
         </section>
 
@@ -129,21 +177,89 @@
             <h3 class="font-semibold text-slate-950 dark:text-white">Change requests</h3>
             <form method="POST" action="{{ route('work-orders.change-requests', $workOrder) }}" class="mt-4 space-y-4">
                 @csrf
+                <div>
+                    <label for="reason_code" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Reason</label>
+                    <select id="reason_code" name="reason_code" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                        @foreach ($changeReasonCodes as $code => $label)
+                            <option value="{{ $code }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <x-field name="summary" label="Summary" />
                 <x-field name="details" label="Details" textarea />
+                <div class="grid gap-4 md:grid-cols-3">
+                    <x-field name="scope_impact" label="Scope impact" textarea />
+                    <x-field name="schedule_impact" label="Schedule impact" textarea />
+                    <x-field name="terms_impact" label="Terms impact" textarea />
+                </div>
                 <x-secondary-button type="submit">Record change request</x-secondary-button>
             </form>
             <div class="mt-4 space-y-3">
                 @forelse ($workOrder->changeRequests() as $requestRecord)
                     <div class="rounded-md border border-slate-200 p-4 text-sm dark:border-slate-800">
                         <p class="font-semibold text-slate-950 dark:text-white">{{ $requestRecord['summary'] }}</p>
-                        <p class="mt-1 text-slate-500 dark:text-slate-400">{{ $requestRecord['requested_by_name'] ?? 'User' }} | {{ $requestRecord['status'] ?? 'open' }} | {{ $requestRecord['requested_at'] ?? '' }}</p>
+                        <p class="mt-1 text-slate-500 dark:text-slate-400">{{ $requestRecord['requested_by_name'] ?? 'User' }} | {{ $requestRecord['reason_label'] ?? 'Change' }} | {{ $requestRecord['status'] ?? 'open' }} | {{ $requestRecord['requested_at'] ?? '' }}</p>
                         @if (! empty($requestRecord['details']))
                             <p class="mt-2 whitespace-pre-line text-slate-700 dark:text-slate-300">{{ $requestRecord['details'] }}</p>
+                        @endif
+                        <div class="mt-3 grid gap-3 text-xs md:grid-cols-3">
+                            <p><span class="font-semibold">Scope:</span> {{ $requestRecord['scope_impact'] ?? 'Not specified' }}</p>
+                            <p><span class="font-semibold">Schedule:</span> {{ $requestRecord['schedule_impact'] ?? 'Not specified' }}</p>
+                            <p><span class="font-semibold">Terms:</span> {{ $requestRecord['terms_impact'] ?? 'Not specified' }}</p>
+                        </div>
+                        @if (! empty($requestRecord['id']) && ($requestRecord['status'] ?? 'open') === 'open' && (auth()->id() !== ($requestRecord['requested_by_id'] ?? null) || auth()->user()->hasRole('admin')))
+                            <form method="POST" action="{{ route('work-orders.change-requests.resolve', [$workOrder, $requestRecord['id']]) }}" class="mt-3 grid gap-3 border-t border-slate-200 pt-3 dark:border-slate-800 md:grid-cols-[.6fr_1.4fr_auto]">
+                                @csrf
+                                @method('PATCH')
+                                <select name="status" class="rounded-md border-slate-300 bg-white text-sm text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                                    <option value="accepted">Accept</option>
+                                    <option value="declined">Decline</option>
+                                    <option value="withdrawn">Withdraw</option>
+                                </select>
+                                <input name="resolution_notes" class="rounded-md border-slate-300 bg-white text-sm text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" placeholder="Resolution notes">
+                                <x-secondary-button type="submit">Update</x-secondary-button>
+                            </form>
                         @endif
                     </div>
                 @empty
                     <p class="text-sm text-slate-600 dark:text-slate-400">No change requests yet.</p>
+                @endforelse
+            </div>
+        </section>
+
+        <section class="tse-panel p-6">
+            <h3 class="font-semibold text-slate-950 dark:text-white">Contact and support event log</h3>
+            @if (auth()->id() === $workOrder->provider_id || auth()->user()->hasRole('admin'))
+                <form method="POST" action="{{ route('work-orders.contact-events.store', $workOrder) }}" class="mt-4 space-y-4">
+                    @csrf
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="event_type" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Event type</label>
+                            <select id="event_type" name="event_type" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                                @foreach ($contactEventTypes as $code => $label)
+                                    <option value="{{ $code }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <x-field name="attempted_channel" label="Attempted channel" />
+                        <x-field name="attempted_at" label="Attempted at" type="datetime-local" />
+                        <x-field name="result" label="Result" />
+                    </div>
+                    <x-field name="notes" label="Notes" textarea />
+                    <x-secondary-button type="submit">Log contact/support event</x-secondary-button>
+                </form>
+            @endif
+            <div class="mt-4 space-y-3">
+                @forelse ($workOrder->contactEvents as $event)
+                    <div class="rounded-md border border-slate-200 p-4 text-sm dark:border-slate-800">
+                        <p class="font-semibold text-slate-950 dark:text-white">{{ $contactEventTypes[$event->event_type] ?? str_replace('_', ' ', $event->event_type) }}</p>
+                        <p class="mt-1 text-slate-500 dark:text-slate-400">{{ $event->user->name }} | {{ $event->attempted_at?->format('M j, Y g:i A') ?? $event->created_at->format('M j, Y g:i A') }} | {{ $event->attempted_channel ?: 'No channel' }} | {{ $event->result ?: 'No result' }}</p>
+                        @if ($event->notes)
+                            <p class="mt-2 whitespace-pre-line text-slate-700 dark:text-slate-300">{{ $event->notes }}</p>
+                        @endif
+                    </div>
+                @empty
+                    <p class="text-sm text-slate-600 dark:text-slate-400">No contact/support events have been logged.</p>
                 @endforelse
             </div>
         </section>
@@ -213,9 +329,11 @@
                         <x-field name="rating" label="Overall rating 1-5" type="number" />
                     </div>
                     @foreach ($reviewFields as $field => $label)
-                        @php($definitionKey = $fieldDefinitionKeys[$field] ?? null)
+                        @php
+                            $definitionKey = $fieldDefinitionKeys[$field] ?? null;
+                        @endphp
                         <div>
-                            <x-field name="{{ $field }}" label="{{ $label }} 1-5" type="number" />
+                            <x-field :name="$field" :label="$label.' 1-5'" type="number" />
                             @if ($definitionKey && ! empty($definitions[$definitionKey]))
                                 <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ $definitions[$definitionKey] }}</p>
                             @endif
@@ -308,6 +426,14 @@
             <form method="POST" action="{{ route('disputes.store', $workOrder) }}" class="mt-4 space-y-4">
                 @csrf
                 <x-field name="summary" label="Summary" />
+                <div>
+                    <label for="dispute_reason_code" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Reason code</label>
+                    <select id="dispute_reason_code" name="reason_code" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                        @foreach ($disputeReasonCodes as $code => $label)
+                            <option value="{{ $code }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <x-field name="claim" label="Claim" textarea />
                 <x-field name="evidence_notes" label="Evidence notes" textarea />
                 <x-primary-button>Open dispute</x-primary-button>

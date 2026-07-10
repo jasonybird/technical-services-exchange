@@ -1,15 +1,81 @@
 <x-app-layout>
     <x-slot name="header"><h2 class="text-xl font-semibold">{{ $job->title }}</h2></x-slot>
     <div class="mx-auto max-w-6xl space-y-6 p-6">
-        <section class="rounded border bg-white p-6">
-            <p class="text-sm text-gray-500">{{ $job->location }} | {{ $job->service_category }} | {{ $job->status }}</p>
-            <p class="mt-4 whitespace-pre-line">{{ $job->scope }}</p>
+        <section class="rounded border bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">{{ $job->location }} | {{ $job->service_category }} | {{ $job->status }}</p>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <x-badge tone="{{ $job->scope_clarity_status === 'clear' ? 'emerald' : 'amber' }}">Scope {{ str_replace('_', ' ', $job->scope_clarity_status) }}</x-badge>
+                        @if ($job->contact_certified)
+                            <x-badge tone="emerald">Support certified</x-badge>
+                        @else
+                            <x-badge tone="rose">Support not certified</x-badge>
+                        @endif
+                        @if ($job->remote_eligible)
+                            <x-badge tone="sky">Remote eligible</x-badge>
+                        @endif
+                    </div>
+                </div>
+                <div class="text-sm text-slate-600 dark:text-slate-400 sm:text-right">
+                    <p>{{ $job->starts_at?->format('M j, Y g:i A') ?? 'No start set' }}</p>
+                    <p>{{ $job->time_window ?: 'No window set' }} | {{ str_replace('_', ' ', $job->schedule_type ?: 'schedule not set') }}</p>
+                </div>
+            </div>
+
+            @if (is_array($job->risk_flags) && $job->risk_flags)
+                <div class="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+                    <p class="font-semibold">Risk flags</p>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        @foreach ($job->risk_flags as $flag)
+                            <x-badge tone="amber">{{ str_replace('_', ' ', $flag) }}</x-badge>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <div class="mt-6 rounded-md border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-100">
+                <p class="font-semibold">Anti-catch-all rule</p>
+                <p class="mt-1">The structured scope fields define this job. Supplemental instructions are preserved for reference, but they do not override included work, excluded work, closeout conditions, or change-request requirements.</p>
+            </div>
+
             <dl class="mt-6 grid gap-4 md:grid-cols-2">
+                <div><dt class="text-sm text-gray-500">Primary objective</dt><dd class="whitespace-pre-line">{{ $job->primary_objective ?: $job->scope }}</dd></div>
+                <div><dt class="text-sm text-gray-500">Expected duration</dt><dd class="whitespace-pre-line">{{ $job->expected_duration ?: 'Not specified' }}</dd></div>
+                <div><dt class="text-sm text-gray-500">Included work</dt><dd class="whitespace-pre-line">{{ $job->included_work ?: 'Not specified' }}</dd></div>
+                <div><dt class="text-sm text-gray-500">Excluded work</dt><dd class="whitespace-pre-line">{{ $job->excluded_work ?: 'Not specified' }}</dd></div>
+                <div><dt class="text-sm text-gray-500">Maximum onsite expectations</dt><dd class="whitespace-pre-line">{{ $job->maximum_onsite_expectations ?: 'Not specified' }}</dd></div>
+                <div><dt class="text-sm text-gray-500">Closeout conditions</dt><dd class="whitespace-pre-line">{{ $job->closeout_conditions ?: 'Not specified' }}</dd></div>
                 <div><dt class="text-sm text-gray-500">Required skills</dt><dd class="whitespace-pre-line">{{ $job->required_skills }}</dd></div>
                 <div><dt class="text-sm text-gray-500">Required tools</dt><dd class="whitespace-pre-line">{{ $job->required_tools }}</dd></div>
+                <div><dt class="text-sm text-gray-500">Required certifications</dt><dd class="whitespace-pre-line">{{ $job->required_certifications ?: 'None listed' }}</dd></div>
+                <div><dt class="text-sm text-gray-500">Safety gear</dt><dd class="whitespace-pre-line">{{ $job->required_safety_gear ?: 'None listed' }}</dd></div>
                 <div><dt class="text-sm text-gray-500">Deliverables</dt><dd class="whitespace-pre-line">{{ $job->deliverables }}</dd></div>
                 <div><dt class="text-sm text-gray-500">Payment terms</dt><dd class="whitespace-pre-line">{{ $job->payment_terms }}</dd></div>
+                <div><dt class="text-sm text-gray-500">Buyer-provided equipment</dt><dd class="whitespace-pre-line">{{ $job->buyer_provided_equipment ?: 'Not specified' }}</dd></div>
+                <div><dt class="text-sm text-gray-500">Provider-provided equipment</dt><dd class="whitespace-pre-line">{{ $job->provider_provided_equipment ?: 'Not specified' }}</dd></div>
+                <div><dt class="text-sm text-gray-500">Return shipment</dt><dd class="whitespace-pre-line">{{ $job->return_shipment_expectations ?: 'Not specified' }}</dd></div>
+                <div><dt class="text-sm text-gray-500">Parking/access</dt><dd class="whitespace-pre-line">{{ $job->parking_access_notes ?: 'Not specified' }}</dd></div>
+                <div><dt class="text-sm text-gray-500">Onsite restrictions</dt><dd class="whitespace-pre-line">{{ $job->onsite_restrictions ?: 'Not specified' }}</dd></div>
+                <div><dt class="text-sm text-gray-500">Vendor onboarding</dt><dd class="whitespace-pre-line">{{ $job->vendor_onboarding ?: 'Not specified' }}</dd></div>
             </dl>
+            @if ($job->supplemental_instructions)
+                <details class="mt-6 rounded-md border border-slate-200 p-4 text-sm dark:border-slate-800">
+                    <summary class="cursor-pointer font-semibold text-slate-950 dark:text-white">Supplemental instructions</summary>
+                    <p class="mt-3 whitespace-pre-line text-slate-700 dark:text-slate-300">{{ $job->supplemental_instructions }}</p>
+                </details>
+            @endif
+            <section class="mt-6 rounded-md border border-slate-200 p-4 dark:border-slate-800">
+                <h3 class="font-semibold text-slate-950 dark:text-white">Contact and support coverage</h3>
+                <dl class="mt-3 grid gap-4 text-sm md:grid-cols-3">
+                    <div><dt class="text-gray-500">Primary contact</dt><dd>{{ $job->primary_contact_name ?: 'Not set' }}<br>{{ $job->primary_contact_phone }} {{ $job->primary_contact_email }}</dd></div>
+                    <div><dt class="text-gray-500">Backup contact</dt><dd>{{ $job->backup_contact_name ?: 'Not set' }}<br>{{ $job->backup_contact_phone }} {{ $job->backup_contact_email }}</dd></div>
+                    <div><dt class="text-gray-500">Dispatch contact</dt><dd>{{ $job->dispatch_contact_name ?: 'Not set' }}<br>{{ $job->dispatch_contact_phone }} {{ $job->dispatch_contact_email }}</dd></div>
+                    <div><dt class="text-gray-500">Technical bridge</dt><dd>{{ $job->technical_bridge ?: 'Not set' }}</dd></div>
+                    <div><dt class="text-gray-500">Escalation</dt><dd>{{ $job->escalation_contact ?: 'Not set' }}</dd></div>
+                    <div><dt class="text-gray-500">Support availability</dt><dd>{{ $job->support_availability_window ?: 'Not set' }}<br>{{ $job->support_channel }} {{ $job->support_expected_response_time }}</dd></div>
+                </dl>
+            </section>
             <x-attachments :attachments="$job->attachments" />
             <x-rating-summary :ratings="$job->ratings" />
             <x-rating-form type="job_post" :id="$job->id" category="job_quality" />

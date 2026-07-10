@@ -40,6 +40,55 @@
         </section>
 
         <section>
+            <h2>Scope Safeguards</h2>
+            <p class="muted">Scope clarity: {{ str_replace('_', ' ', $workOrder->scope_clarity_status) }}</p>
+            @if (is_array($workOrder->risk_flags) && $workOrder->risk_flags)
+                <p class="muted">Risk flags: {{ collect($workOrder->risk_flags)->map(fn ($flag) => str_replace('_', ' ', $flag))->implode(', ') }}</p>
+            @endif
+            <div class="grid">
+                <div class="box">
+                    <h3>Primary Objective</h3>
+                    <p>{!! nl2br(e($workOrder->scopeSnapshotValue('primary_objective') ?: $workOrder->jobPost->scope)) !!}</p>
+                </div>
+                <div class="box">
+                    <h3>Included Work</h3>
+                    <p>{!! nl2br(e($workOrder->scopeSnapshotValue('included_work') ?: 'Not specified')) !!}</p>
+                </div>
+                <div class="box">
+                    <h3>Excluded Work</h3>
+                    <p>{!! nl2br(e($workOrder->scopeSnapshotValue('excluded_work') ?: 'Not specified')) !!}</p>
+                </div>
+                <div class="box">
+                    <h3>Closeout Conditions</h3>
+                    <p>{!! nl2br(e($workOrder->scopeSnapshotValue('closeout_conditions') ?: 'Not specified')) !!}</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Contact And Support</h2>
+            <p class="muted">Certified: {{ $workOrder->contactSnapshotValue('contact_certified') ? 'Yes' : 'No' }}</p>
+            <div class="grid">
+                <div class="box">
+                    <h3>Primary</h3>
+                    <p>{{ $workOrder->contactSnapshotValue('primary_contact_name') ?: 'Not set' }}<br>{{ $workOrder->contactSnapshotValue('primary_contact_phone') }} {{ $workOrder->contactSnapshotValue('primary_contact_email') }}</p>
+                </div>
+                <div class="box">
+                    <h3>Backup</h3>
+                    <p>{{ $workOrder->contactSnapshotValue('backup_contact_name') ?: 'Not set' }}<br>{{ $workOrder->contactSnapshotValue('backup_contact_phone') }} {{ $workOrder->contactSnapshotValue('backup_contact_email') }}</p>
+                </div>
+                <div class="box">
+                    <h3>Dispatch</h3>
+                    <p>{{ $workOrder->contactSnapshotValue('dispatch_contact_name') ?: 'Not set' }}<br>{{ $workOrder->contactSnapshotValue('dispatch_contact_phone') }} {{ $workOrder->contactSnapshotValue('dispatch_contact_email') }}</p>
+                </div>
+                <div class="box">
+                    <h3>Escalation</h3>
+                    <p>{{ $workOrder->contactSnapshotValue('escalation_contact') ?: 'Not set' }}<br>{{ $workOrder->contactSnapshotValue('support_channel') }} {{ $workOrder->contactSnapshotValue('support_expected_response_time') }}</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
             <h2>Agreed Terms</h2>
             <p>{!! nl2br(e($workOrder->agreed_terms ?: 'No agreed terms recorded.')) !!}</p>
         </section>
@@ -65,6 +114,28 @@
                     @endforeach
                 </ul>
             @endif
+        </section>
+
+        <section>
+            <h2>Change Requests</h2>
+            <ul>
+                @forelse ($workOrder->changeRequests() as $changeRequest)
+                    <li>{{ $changeRequest['summary'] }} | {{ $changeRequest['reason_label'] ?? 'Change' }} | {{ $changeRequest['status'] ?? 'open' }}</li>
+                @empty
+                    <li>No change requests recorded.</li>
+                @endforelse
+            </ul>
+        </section>
+
+        <section>
+            <h2>Contact / Support Events</h2>
+            <ul>
+                @forelse ($workOrder->contactEvents as $event)
+                    <li>{{ \App\Models\WorkOrderContactEvent::EVENT_TYPES[$event->event_type] ?? str_replace('_', ' ', $event->event_type) }} | {{ $event->attempted_at?->format('M j, Y g:i A') ?? $event->created_at->format('M j, Y g:i A') }} | {{ $event->result ?: 'No result' }}</li>
+                @empty
+                    <li>No contact or support failures recorded.</li>
+                @endforelse
+            </ul>
         </section>
 
         <section>

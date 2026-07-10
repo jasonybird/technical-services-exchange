@@ -206,17 +206,130 @@ class ExchangeWorkflowTest extends TestCase
         $this->assertFalse($workOrder->checklist_completed['Cable test']);
 
         $this->actingAs($provider)->post("/work-orders/{$workOrder->id}/change-requests", [
+            'reason_code' => 'scope_expansion',
             'summary' => 'Add second terminal',
             'details' => 'Buyer requested another POS terminal onsite.',
+            'scope_impact' => 'Install and test one additional terminal.',
+            'schedule_impact' => 'Adds one hour.',
+            'terms_impact' => 'Requires added labor approval.',
         ])->assertRedirect("/work-orders/{$workOrder->id}");
 
-        $this->assertDatabaseHas('work_orders', ['id' => $workOrder->id]);
+        $this->assertDatabaseHas('work_order_change_requests', [
+            'work_order_id' => $workOrder->id,
+            'reason_code' => 'scope_expansion',
+            'summary' => 'Add second terminal',
+        ]);
         $this->assertSame('Add second terminal', $workOrder->fresh()->changeRequests()[0]['summary']);
 
         $this->actingAs($buyer)->get("/work-orders/{$workOrder->id}/print")
             ->assertOk()
             ->assertSee('Arrival photo')
             ->assertSee('Print');
+    }
+
+    public function test_scope_and_contact_safeguards_flow_into_work_orders(): void
+    {
+        $provider = $this->userWithRole('provider');
+        $buyer = $this->userWithRole('buyer');
+
+        $this->actingAs($buyer)->post('/jobs', [
+            'title' => 'Replace POS lane router',
+            'service_category' => 'Point of Sale',
+            'location' => 'Tulsa, OK',
+            'starts_at' => now()->addDays(3)->format('Y-m-d H:i:s'),
+            'time_window' => '9 AM - 12 PM',
+            'schedule_type' => 'flex_window',
+            'scope' => 'Replace the router and confirm lane connectivity.',
+            'primary_objective' => 'Restore POS lane network connectivity.',
+            'included_work' => 'Replace router, connect cables, verify connectivity.',
+            'excluded_work' => 'No ceiling cabling or electrical work.',
+            'maximum_onsite_expectations' => 'One router replacement and basic test.',
+            'expected_duration' => 'Two hours',
+            'required_skills' => 'POS networking',
+            'required_tools' => 'Laptop and cable tester',
+            'deliverables' => "Arrival photo\nCompletion photo",
+            'closeout_conditions' => 'Buyer validates lanes online before closeout.',
+            'payment_terms' => 'Direct ACH',
+            'primary_contact_name' => 'Store Manager',
+            'primary_contact_phone' => '555-0100',
+            'backup_contact_name' => 'Dispatch',
+            'backup_contact_phone' => '555-0101',
+            'support_channel' => 'Phone',
+            'support_expected_response_time' => '15 minutes',
+            'support_availability_window' => 'Full appointment window',
+            'contact_certified' => '1',
+            'visibility' => 'public',
+        ])->assertRedirect();
+
+        $job = JobPost::where('title', 'Replace POS lane router')->firstOrFail();
+
+        $this->assertSame('clear', $job->scope_clarity_status);
+        $this->assertTrue($job->contact_certified);
+        $this->assertSame([], $job->risk_flags);
+
+        $this->actingAs($provider)->post("/jobs/{$job->id}/quotes", [
+            'requested_amount' => 250,
+            'rate_summary' => 'Flat project rate',
+            'terms' => 'Scope exactly as posted.',
+        ])->assertRedirect("/jobs/{$job->id}");
+
+        $quote = $job->quotes()->firstOrFail();
+
+        $this->actingAs($buyer)->post("/quotes/{$quote->id}/accept")
+            ->assertRedirect();
+
+        $workOrder = $job->workOrder()->firstOrFail();
+
+        $this->assertSame('Restore POS lane network connectivity.', $workOrder->scope_snapshot['primary_objective']);
+        $this->assertSame('Store Manager', $workOrder->contact_snapshot['primary_contact_name']);
+        $this->assertSame('clear', $workOrder->scope_clarity_status);
+
+        $this->actingAs($provider)->post("/work-orders/{$workOrder->id}/contact-events", [
+            'event_type' => 'support_unavailable',
+            'attempted_channel' => 'Phone',
+            'result' => 'No answer after two calls',
+            'notes' => 'Support bridge did not answer during the certified window.',
+        ])->assertRedirect("/work-orders/{$workOrder->id}");
+
+        $this->assertDatabaseHas('work_order_contact_events', [
+            'work_order_id' => $workOrder->id,
+            'event_type' => 'support_unavailable',
+            'result' => 'No answer after two calls',
+        ]);
+
+        $this->actingAs($provider)->get("/work-orders/{$workOrder->id}")
+            ->assertOk()
+            ->assertSee('Support unavailable')
+            ->assertSee('Restore POS lane network connectivity.');
+    }
+
+    public function test_disputes_and_votes_accept_reason_codes(): void
+    {
+        [$buyer, $provider, $workOrder] = $this->workOrderFixture();
+
+        $this->actingAs($provider)->post("/work-orders/{$workOrder->id}/disputes", [
+            'summary' => 'Could not reach site contact',
+            'reason_code' => 'unreachable_contact',
+            'claim' => 'The listed contact did not answer.',
+            'evidence_notes' => 'Two calls and one text attempted.',
+        ])->assertRedirect();
+
+        $dispute = $workOrder->disputes()->firstOrFail();
+
+        $this->actingAs($buyer)->post("/disputes/{$dispute->id}/votes", [
+            'recommendation' => 'provider',
+            'reason_code' => 'unreachable_contact',
+            'reason' => 'The provider documented the contact failure.',
+        ])->assertRedirect("/disputes/{$dispute->id}");
+
+        $this->assertDatabaseHas('disputes', [
+            'id' => $dispute->id,
+            'reason_code' => 'unreachable_contact',
+        ]);
+        $this->assertDatabaseHas('dispute_votes', [
+            'dispute_id' => $dispute->id,
+            'reason_code' => 'unreachable_contact',
+        ]);
     }
 
     public function test_external_profile_snapshot_can_be_saved(): void

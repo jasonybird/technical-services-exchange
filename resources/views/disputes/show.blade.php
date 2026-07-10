@@ -3,6 +3,9 @@
     <div class="mx-auto max-w-5xl space-y-6 p-6">
         <section class="rounded border bg-white p-6">
             <p class="text-sm text-gray-500">Opened by {{ $dispute->openedBy->name }} | {{ $dispute->status }}</p>
+            @if ($dispute->reason_code)
+                <p class="mt-2 text-sm font-semibold text-slate-700">Reason: {{ \App\Models\Dispute::REASON_CODES[$dispute->reason_code] ?? str_replace('_', ' ', $dispute->reason_code) }}</p>
+            @endif
             <h3 class="mt-4 font-semibold">Claim</h3>
             <p class="mt-2 whitespace-pre-line">{{ $dispute->claim }}</p>
             <h3 class="mt-4 font-semibold">Evidence notes</h3>
@@ -38,12 +41,21 @@
                     <option value="split">Split resolution</option>
                     <option value="insufficient_evidence">Insufficient evidence</option>
                 </select>
+                <label class="block text-sm font-medium">Primary reason</label>
+                <select name="reason_code" class="rounded-md border-gray-300">
+                    @foreach (\App\Models\Dispute::REASON_CODES as $code => $label)
+                        <option value="{{ $code }}">{{ $label }}</option>
+                    @endforeach
+                </select>
                 <x-field name="reason" label="Reason" textarea />
                 <x-primary-button>Save vote</x-primary-button>
             </form>
             @foreach ($dispute->votes as $vote)
                 <div class="mt-3 rounded bg-gray-50 p-3 text-sm">
                     <p class="font-semibold">{{ $vote->user->name }} | {{ str_replace('_', ' ', $vote->recommendation) }}</p>
+                    @if ($vote->reason_code)
+                        <p class="text-gray-500">{{ \App\Models\Dispute::REASON_CODES[$vote->reason_code] ?? str_replace('_', ' ', $vote->reason_code) }}</p>
+                    @endif
                     <p class="whitespace-pre-line">{{ $vote->reason }}</p>
                 </div>
             @endforeach

@@ -1,6 +1,6 @@
 # Forward Phase Plan
 
-This plan starts from the current Provider Exchange codebase as of commit `926455b` and reconciles the previous Phase 5-10 plan with the Field Nation product research captured on July 10, 2026.
+This plan starts from the current Provider Exchange codebase and reconciles the previous Phase 5-10 plan with the Field Nation product research captured on July 10, 2026.
 
 The goal is not to clone Field Nation. The goal is to keep the useful operational patterns while designing against the exact provider-hostile problems we observed: opaque scoring, catch-all scope language, unreachable buyer contacts, weak filtering safeguards, and work-order ambiguity.
 
@@ -14,9 +14,9 @@ The goal is not to clone Field Nation. The goal is to keep the useful operationa
 - Buyer profiles with public/private section visibility, company description, service categories, hiring regions, structured hiring policies, locations, vendor onboarding, payment terms, website, contact email, public contact toggle, private notes, attachments, and ratings.
 - Public provider and buyer directories with basic keyword filters, text-field filters, public-contact filter, sort by newest/name/rating, result counts, filter badges, and card views.
 - Community feed posts and comments.
-- Buyer job posts with title, status, service category, location, start time, time window, scope, required skills, required tools, deliverables, payment terms, vendor onboarding, visibility, comments, attachments, quotes, ratings, and accepted work-order creation.
+- Buyer job posts with title, status, service category, location, start time, time window, scope, structured scope fields, requirements, closeout rules, support/contact certification, risk flags, payment terms, vendor onboarding, visibility, comments, attachments, quotes, ratings, and accepted work-order creation.
 - Provider quote submission, quote revision history, quote decline flow, and buyer quote acceptance.
-- Work orders created from accepted quotes with buyer/provider participants, status transitions, timestamps, agreed terms, checklist items, checklist completion state, evidence requirements, evidence rules, change-request JSON records, completion notes, messages, attachments, print packet, reviews, disputes, and ratings.
+- Work orders created from accepted quotes with buyer/provider participants, status transitions, timestamps, agreed terms, checklist items, checklist completion state, evidence requirements, evidence rules, scope/contact snapshots, first-class change requests, contact/support events, completion notes, messages, attachments, print packet, reviews, disputes, and ratings.
 - Work-order status flow: assigned, en route, onsite, in progress, completed, buyer approved, disputed, closed, cancelled.
 - Mutual work-order reviews with five-star overall rating and category ratings for communication, scope accuracy, payment reliability, workmanship, and timeliness.
 - Universal ratings for provider profiles, buyer profiles, job posts, work orders, and disputes.
@@ -29,13 +29,11 @@ The goal is not to clone Field Nation. The goal is to keep the useful operationa
 
 ### Current Weak Spots In Code
 
-- Job posting still centers on a single free-form `scope` field, which allows the exact catch-all work-order behavior we want to prevent.
-- Job posts do not yet have explicit fields for primary objective, included work, excluded work, maximum onsite expectation, schedule type, support/contact certification, escalation path, risk flags, or scope-clarity status.
+- Job posting now has structured scope and support certification fields, but the creation UI should be refined into reusable templates and stronger validation before real marketplace use.
 - Provider and buyer directories use text-based filters instead of normalized category, skill, coverage, remote, rating, and reliability filters.
 - Work-order lists are card-based and lack the dense assigned/available-work table that worked well in Field Nation.
-- Work-order detail has good sections, but contact availability, support failure logging, schedule update requests, running-late records, and report-problem records are not first-class workflow events yet.
-- Change requests exist only as JSON on the work order, with no status lifecycle, approval/denial path, price/time impact, or dispute linkage.
-- Disputes have votes, but reason codes are free text and do not yet include structured categories such as scope expansion, unreachable contact, missing deliverable, payment issue, or buyer support failure.
+- Work-order detail now supports contact/support failure logging and first-class change requests, but schedule update requests, running-late records, and general report-problem records still need a dedicated workflow.
+- Disputes and votes now have reason codes, but quorum rules, visibility rules, and deeper evidence timelines still need a future pass.
 - Reviews exist, but there is no review response, report flow, edit window, moderation queue, category definitions page, or imported/native reputation distinction in the UI.
 - Universal ratings are flexible, but category names are arbitrary strings and not governed by a taxonomy.
 - External profile imports store summary numbers and notes, but not structured work-category history, imported endorsement categories, imported review snapshots with privacy controls, or imported-vs-native display rules.
@@ -171,6 +169,18 @@ Provider-protection rules:
 - Undefined scope should not become provider fault.
 - Dispute reasons should distinguish poor provider performance from buyer-created ambiguity.
 
+Implementation status:
+
+- Completed first implementation pass.
+- Added structured job scope fields and support/contact certification fields.
+- Added computed scope clarity and risk flags on jobs and work orders.
+- Snapshotted scope and contact commitments when a quote becomes a work order.
+- Converted change requests to first-class records with reason and impact fields while preserving legacy JSON fallback.
+- Added contact/support event records for contact failed, support unavailable, site contact unavailable, and contact reached.
+- Added print packet visibility for scope safeguards, support contacts, change requests, and contact/support events.
+- Added reason codes to disputes and peer votes.
+- Verified with Windows `php artisan test`.
+
 ## Phase 7 - Contact Accountability And Support Availability
 
 Purpose:
@@ -222,6 +232,17 @@ Provider-protection rules:
 - If support is required, support availability must be explicit.
 - If contacts fail, that should be evidence, not a buried message.
 - Buyer reliability should include support availability, not only payment.
+
+Implementation status:
+
+- Completed first implementation pass alongside Phase 6.
+- Job creation now captures primary, backup, dispatch, bridge, escalation, support channel, response time, support window, and certification.
+- Work orders preserve the accepted job contact snapshot.
+- Providers can log contact/support events as evidence.
+- Contact issue counts show on the work-order detail.
+- Print packets include contact/support coverage and logged contact events.
+- Dispute reason codes include unreachable contact and support unavailable.
+- Verified with Windows `php artisan test`.
 
 ## Phase 8 - Available Work Board And Filtering System
 
@@ -661,16 +682,11 @@ Provider-protection rules:
 
 ## Recommended Immediate Sequence
 
-1. Phase 5A: review category definitions, review response, edit window, and report flow.
-2. Phase 5B: moderation queue for reported reviews and rating governance docs in the UI.
-3. Phase 6A: structured job scope fields and anti-catch-all guardrails.
-4. Phase 6B: risk badges and scope clarity indicators on job list/detail.
-5. Phase 7A: contact/support certification fields on job posts and work orders.
-6. Phase 7B: provider contact-failure/support-unavailable event logging.
-7. Phase 8A: dense available-work board with compact filters.
-8. Phase 9A: taxonomy tables and starter work-category seeds.
-9. Phase 10A: guided imported-history wizard.
-10. Phase 11A: mobile-safe API endpoints for onsite work-order actions.
+1. Phase 8A: dense available-work board with compact filters.
+2. Phase 8B: saved searches, risk filter chips, and provider default filters.
+3. Phase 9A: taxonomy tables and starter work-category seeds.
+4. Phase 10A: guided imported-history wizard.
+5. Phase 11A: mobile-safe API endpoints for onsite work-order actions.
 
 ## Key Design Commitments
 

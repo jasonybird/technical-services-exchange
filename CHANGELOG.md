@@ -16,6 +16,7 @@ This project uses Git as the primary rollback trail. The `.old` convention is re
 - Added Phase 3 asset and storage management with configurable attachment disk/root/size/MIME policy, image previews, file metadata display, attachment deletion, update-script storage linking, and upload policy tests.
 - Added Phase 4 work-order and profile depth with structured work-order setup, checklist completion, evidence rules, change requests, print packets, structured provider services/tools/certifications, structured buyer policies/locations, and public/private profile section controls.
 - Added Phase 5 reputation governance with explicit review category definitions, buyer/provider-specific review dimensions, reviewee responses, review report flow, admin moderation controls, moderation status tracking, a review edit window, and imported-history labeling.
+- Added Phase 6/7 scope and contact safeguards with structured job scope fields, scope clarity and risk badges, support/contact certification, work-order scope/contact snapshots, first-class change requests, contact/support event logging, reason-coded disputes, and print-packet support.
 - Created the Laravel Provider Exchange prototype with Breeze authentication, seeded demo users, and role support for admins, providers, buyers, and hybrid accounts.
 - Added provider and buyer profile management with service areas, profile details, and external profile snapshot records.
 - Added social posts, buyer job posts, provider quotes, quote revisions, quote decline flow, and buyer quote acceptance.
@@ -33,6 +34,7 @@ This project uses Git as the primary rollback trail. The `.old` convention is re
 
 - `php artisan test` passed with 35 tests and 116 assertions.
 - `php artisan test` passed under WSL with 44 tests and 195 assertions after Phase 5.
+- `php artisan test` passed under Windows PHP with 46 tests and 216 assertions after enabling `pdo_sqlite`, `sqlite3`, `fileinfo`, and `gd` in `C:\tools\php85\php.ini`.
 - `npm run build` passed with a production Vite build.
 - `https://christit.com/tse/login` loads publicly.
 - Seeded admin login succeeds on `https://christit.com/tse` and reaches `/tse/dashboard`.

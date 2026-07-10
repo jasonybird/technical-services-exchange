@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['dispute_id', 'user_id', 'recommendation', 'reason'])]
+#[Fillable(['dispute_id', 'user_id', 'recommendation', 'reason_code', 'reason'])]
 class DisputeVote extends Model
 {
     public function dispute(): BelongsTo

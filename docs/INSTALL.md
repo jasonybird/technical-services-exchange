@@ -38,7 +38,7 @@ The preferred working loop for this project is:
 ## Important Notes
 
 - The installer is a first-pass Ubuntu/Nginx helper, not a universal hosting panel installer.
-- Local and CI test runners need PHP SQLite support: `pdo_sqlite` and `sqlite3`.
+- Local and CI test runners need PHP SQLite and upload-test support: `pdo_sqlite`, `sqlite3`, `fileinfo`, and `gd`.
 - Public attachment serving needs `php artisan storage:link`; the checked-in update script runs this automatically.
 - Tune upload policy with `TSE_ATTACHMENT_DISK`, `TSE_ATTACHMENT_ROOT`, `TSE_ATTACHMENT_MAX_KB`, and `TSE_ATTACHMENT_MIME_TYPES`.
 - Review `.env` before production use.

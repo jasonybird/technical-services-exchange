@@ -14,6 +14,7 @@ class DisputeVoteController extends Controller
 
         $data = $request->validate([
             'recommendation' => ['required', 'string', 'in:provider,buyer,split,insufficient_evidence'],
+            'reason_code' => ['nullable', 'string', 'in:'.implode(',', array_keys(Dispute::REASON_CODES))],
             'reason' => ['nullable', 'string', 'max:2000'],
         ]);
 

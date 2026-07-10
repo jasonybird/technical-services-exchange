@@ -13,6 +13,9 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 - Quote revisions, quote decline flow, and quote acceptance.
 - Work-order creation from accepted quotes.
 - Work-order status transitions, messages, attachments, deliverables, and completion notes.
+- Structured job scope, scope clarity status, risk badges, and anti-catch-all supplemental instruction guardrails.
+- Buyer contact/support certification, work-order contact snapshots, and provider contact/support failure logging.
+- First-class work-order change requests with reason codes, impact fields, status lifecycle, and print-packet visibility.
 - Configurable attachment storage policy with upload root, disk, size cap, MIME allowlist, image previews, file metadata, and deletion.
 - Mutual reviews with category metrics.
 - Peer-review disputes with comments, evidence, structured recommendations, and public vote breakdowns.
@@ -39,8 +42,8 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 3. Asset and storage management: configurable upload roots, file policy, attachment previews, deletion, and update-path storage link handling.
 4. Work-order depth: checklist templates, required evidence rules, appointment windows, onsite timestamps, change-request records, and print/PDF export for work-order packets.
 5. Reputation refinement: rating category definitions, anti-abuse controls, edit windows, report flows, and moderation views.
-6. Dispute workflow: better evidence timelines, reason-coded votes, quorum/visibility rules, and admin/community moderation tools.
-7. Notifications: channel preferences, email templates, and event-specific subscription controls.
+6. Scope clarity and work-order safeguards: structured job scope, risk badges, anti-catch-all rules, first-class change requests, and reason-coded dispute paths.
+7. Contact accountability and support availability: certified contacts, support windows, event logs for failed support/contact attempts, and contact reliability evidence.
 8. API/mobile prep: token-scoped endpoints, versioned API resources, geolocation check-in groundwork, and mobile-safe work-order actions.
 9. Import tooling: guided manual imports for Field Nation, WorkMarket, and similar profile/review history.
 10. Competency tags and levels: provider/buyer tag taxonomies, smart-hands entry lane, specialty tags such as network, POTS, POS, AV, cabling, installer, and troubleshooter, plus earned level badges based on completed work and reputation signals.
@@ -50,10 +53,8 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 
 ## Phase Checkpoint
 
-Phases 1-5 have been implemented locally. Phases 1-4 have been shipped through the local -> GitHub -> ChristIT update workflow; Phase 5 is ready for the next ship/update pass. The next active planning block is:
+Phases 1-7 have been implemented locally. Phases 1-5 have been shipped through the local -> GitHub -> ChristIT update workflow. Phase 6/7 is ready for the next ship/update pass. The next active planning block is:
 
-6. Dispute workflow: better evidence timelines, reason-coded votes, scope-expansion and unreachable-contact reasons, quorum/visibility rules, and admin/community moderation tools.
-7. Notifications: channel preferences, email templates, and event-specific subscription controls.
 8. API/mobile prep: token-scoped endpoints, versioned API resources, geolocation check-in groundwork, contact/support failure logging, and mobile-safe work-order actions.
 9. Import tooling: guided manual imports for Field Nation, WorkMarket, and similar profile/review history.
 10. Competency tags and levels: provider/buyer tag taxonomies, smart-hands entry lane, specialty tags such as network, POTS, POS, AV, cabling, installer, and troubleshooter, plus earned level badges based on completed work and reputation signals.
@@ -82,6 +83,17 @@ Phase 5 implementation completed:
 - Admins can moderate reported reviews from the admin dashboard.
 - Review edits are limited by a configurable edit window.
 - Imported marketplace history is labeled separately from native TSE reputation.
+
+Phase 6/7 implementation completed:
+
+- Job posts now include structured scope fields for primary objective, included work, excluded work, maximum onsite expectations, duration, requirements, closeout conditions, equipment expectations, return shipment, access notes, restrictions, and supplemental instructions.
+- Supplemental instructions are explicitly treated as reference material that cannot override structured scope boundaries.
+- Job cards, job detail, and work orders show scope clarity, support certification, and computed risk badges.
+- Accepted quotes snapshot the job scope and contact/support commitments into the work order.
+- Change requests are first-class records with reason code, scope impact, schedule impact, terms impact, status, responder, and resolution notes.
+- Providers can log contact failed, support unavailable, site contact unavailable, or contact reached events with channel, time, result, and notes.
+- Work-order print packets include scope safeguards, contact/support coverage, change requests, and contact/support events.
+- Disputes and peer votes now support reason codes such as scope expansion, unreachable contact, support unavailable, payment issue, and insufficient evidence.
 
 Available-work safeguards to carry into directory and job-list phases:
 
