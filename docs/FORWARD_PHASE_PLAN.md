@@ -32,7 +32,7 @@ The goal is not to clone Field Nation. The goal is to keep the useful operationa
 - Job posting now has structured scope and support certification fields, but the creation UI should be refined into reusable templates and stronger validation before real marketplace use.
 - Provider and buyer directories use text-based filters instead of normalized category, skill, coverage, remote, rating, and reliability filters.
 - Work-order lists are card-based and lack the dense assigned/available-work table that worked well in Field Nation.
-- Work-order detail now supports contact/support failure logging and first-class change requests, but schedule update requests, running-late records, and general report-problem records still need a dedicated workflow.
+- Work-order detail now supports contact/support failure logging and first-class change requests, but schedule update requests, running-late records, post-work tag verification, and general report-problem records still need a dedicated workflow.
 - Disputes and votes now have reason codes, but quorum rules, visibility rules, and deeper evidence timelines still need a future pass.
 - Reviews exist, but there is no review response, report flow, edit window, moderation queue, category definitions page, or imported/native reputation distinction in the UI.
 - Universal ratings are flexible, but category names are arbitrary strings and not governed by a taxonomy.
@@ -310,6 +310,14 @@ Provider-protection rules:
 - Jobs should not rank purely by buyer preference or low provider rate.
 - Risk flags should be visible before a provider opens the work order.
 
+Implementation status:
+
+- Completed first implementation pass alongside Phase 9.
+- Replaced the jobs list with a denser available-work board.
+- Added filters for category, technician level, scope clarity, support certification, remote eligibility, and hide risky jobs.
+- Added columns for buyer, location, category, specialty, technician level, schedule, work mode, pay type, terms summary, quote count, scope clarity, support certification, and risk badges.
+- Verified with Windows `php artisan test`.
+
 ## Phase 9 - Taxonomy, Competency Tags, And Profile Evidence
 
 Purpose:
@@ -396,6 +404,23 @@ Provider-protection rules:
 - Tags should distinguish smart-hands work from skilled technical work.
 - Buyers should not be able to demand advanced work while labeling it smart hands.
 - Certification proof should be controlled by the provider and privacy-aware.
+
+Implementation status:
+
+- Completed first implementation pass alongside Phase 8.
+- Added `taxonomy_terms` for categories, specialties, skills, tools, and certifications.
+- Added provider/tag pivot records with evidence sources.
+- Added starter seed taxonomy for field-service categories and common traits/tools/certifications.
+- Added explicit technician level definitions:
+  - Level 1 smart hands,
+  - Level 2 installer,
+  - Level 3 troubleshooter,
+  - Level 4 specialist,
+  - Level 5 project lead.
+- Added provider maximum technician level and self-declared tags in profile editing.
+- Added buyer job technician-level selection and scope mismatch risk detection for smart-hands jobs that include troubleshooting or certification requirements.
+- Added provider directory filters for technician level and taxonomy tag.
+- Deferred buyer post-work tag endorsement/disagreement to the next verification pass.
 
 ## Phase 10 - Import Tooling And Marketplace History
 
@@ -682,11 +707,11 @@ Provider-protection rules:
 
 ## Recommended Immediate Sequence
 
-1. Phase 8A: dense available-work board with compact filters.
-2. Phase 8B: saved searches, risk filter chips, and provider default filters.
-3. Phase 9A: taxonomy tables and starter work-category seeds.
-4. Phase 10A: guided imported-history wizard.
-5. Phase 11A: mobile-safe API endpoints for onsite work-order actions.
+1. Post-work provider tag verification: buyer endorsement/disagreement with self-declared level and tags after completed work orders.
+2. Phase 10A: guided imported-history wizard.
+3. Phase 11A: mobile-safe API endpoints for onsite work-order actions.
+4. Phase 12A: notification preference UI and event-channel controls.
+5. Phase 13A: audit logs and moderation/operations queues.
 
 ## Key Design Commitments
 

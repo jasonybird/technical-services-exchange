@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProviderProfile;
+use App\Models\TaxonomyTerm;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -11,7 +12,7 @@ class ProviderProfileController extends Controller
 {
     public function index(Request $request): View
     {
-        $profiles = ProviderProfile::with('user', 'externalImports', 'attachments', 'ratings.user')
+        $profiles = ProviderProfile::with('user', 'externalImports', 'taxonomyTerms', 'attachments', 'ratings.user')
             ->withAvg(['ratings as average_stars' => fn ($query) => $query->whereNotNull('stars')], 'stars')
             ->withCount('ratings');
 
@@ -32,6 +33,14 @@ class ProviderProfileController extends Controller
             $profiles->where('skills', 'like', "%{$skill}%");
         }
 
+        if ($level = $request->integer('technician_level')) {
+            $profiles->where('max_technician_level', '>=', $level);
+        }
+
+        if ($tag = $request->integer('taxonomy_term_id')) {
+            $profiles->whereHas('taxonomyTerms', fn ($query) => $query->whereKey($tag));
+        }
+
         if ($insurance = $request->string('insurance')->toString()) {
             $profiles->where('insurance_status', 'like', "%{$insurance}%");
         }
@@ -48,7 +57,14 @@ class ProviderProfileController extends Controller
 
         return view('providers.index', [
             'profiles' => $profiles->paginate(20)->withQueryString(),
-            'filters' => $request->only(['q', 'service_area', 'skill', 'insurance', 'public_contact', 'sort']),
+            'filters' => $request->only(['q', 'service_area', 'skill', 'technician_level', 'taxonomy_term_id', 'insurance', 'public_contact', 'sort']),
+            'technicianLevels' => config('technician-levels'),
+            'taxonomyTerms' => TaxonomyTerm::whereIn('type', ['work_category', 'work_specialty', 'skill', 'tool', 'certification'])
+                ->where('is_active', true)
+                ->orderBy('type')
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
@@ -57,7 +73,14 @@ class ProviderProfileController extends Controller
         abort_unless($request->user()->hasRole('provider'), 403);
 
         return view('providers.edit', [
-            'profile' => $request->user()->providerProfile?->load('attachments', 'externalImports.attachments'),
+            'profile' => $request->user()->providerProfile?->load('attachments', 'externalImports.attachments', 'taxonomyTerms'),
+            'technicianLevels' => config('technician-levels'),
+            'taxonomyTerms' => TaxonomyTerm::whereIn('type', ['work_category', 'work_specialty', 'skill', 'tool', 'certification'])
+                ->where('is_active', true)
+                ->orderBy('type')
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 
@@ -70,7 +93,10 @@ class ProviderProfileController extends Controller
             'headline' => ['nullable', 'string', 'max:255'],
             'bio' => ['nullable', 'string'],
             'service_area' => ['nullable', 'string', 'max:255'],
+            'max_technician_level' => ['required', 'integer', 'min:1', 'max:5'],
             'skills' => ['nullable', 'string'],
+            'taxonomy_terms' => ['nullable', 'array'],
+            'taxonomy_terms.*' => ['integer', 'exists:taxonomy_terms,id'],
             'services_text' => ['nullable', 'string'],
             'tools' => ['nullable', 'string'],
             'tool_inventory_text' => ['nullable', 'string'],
@@ -97,10 +123,15 @@ class ProviderProfileController extends Controller
         ]);
         unset($data['services_text'], $data['tool_inventory_text'], $data['certification_records_text']);
 
-        $request->user()->providerProfile()->updateOrCreate(
+        $profile = $request->user()->providerProfile()->updateOrCreate(
             ['user_id' => $request->user()->id],
             $data
         );
+
+        $sync = collect($data['taxonomy_terms'] ?? [])
+            ->mapWithKeys(fn ($termId): array => [(int) $termId => ['evidence_source' => 'self_declared']])
+            ->all();
+        $profile->taxonomyTerms()->sync($sync);
 
         return redirect()->route('providers.edit')->with('status', 'Provider profile saved.');
     }
@@ -108,7 +139,7 @@ class ProviderProfileController extends Controller
     public function show(ProviderProfile $provider): View
     {
         return view('providers.show', [
-            'profile' => $provider->load('user', 'externalImports.attachments', 'attachments', 'ratings.user'),
+            'profile' => $provider->load('user', 'externalImports.attachments', 'taxonomyTerms', 'attachments', 'ratings.user'),
         ]);
     }
 

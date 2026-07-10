@@ -6,6 +6,41 @@
             <section class="grid gap-4 md:grid-cols-2">
                 <x-field name="title" label="Title" />
                 <x-field name="service_category" label="Service category" />
+                <div>
+                    <label for="work_category_id" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Work category</label>
+                    <select id="work_category_id" name="work_category_id" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                        <option value="">Choose category</option>
+                        @foreach ($categories as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="work_specialty_id" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Specialty</label>
+                    <select id="work_specialty_id" name="work_specialty_id" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                        <option value="">Choose specialty</option>
+                        @foreach ($specialties as $specialty)
+                            <option value="{{ $specialty->id }}">{{ $specialty->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="required_technician_level" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Technician level requested</label>
+                    <select id="required_technician_level" name="required_technician_level" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                        @foreach ($technicianLevels as $level => $definition)
+                            <option value="{{ $level }}">{{ $definition['name'] }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">The posted scope should match this level. Smart-hands work needs clear instructions and active support.</p>
+                </div>
+                <div>
+                    <label for="work_mode" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Work mode</label>
+                    <select id="work_mode" name="work_mode" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                        <option value="onsite">Onsite</option>
+                        <option value="remote">Remote</option>
+                        <option value="hybrid">Hybrid</option>
+                    </select>
+                </div>
                 <x-field name="location" label="Location" />
                 <x-field name="starts_at" label="Start date/time" type="datetime-local" />
                 <x-field name="time_window" label="Time window" />
@@ -21,6 +56,16 @@
                     <input type="checkbox" name="remote_eligible" value="1" class="rounded border-slate-300 text-sky-600 shadow-sm focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950">
                     Remote eligible
                 </label>
+                <div>
+                    <label for="pay_type" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Pay type</label>
+                    <select id="pay_type" name="pay_type" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                        <option value="not_listed">Not listed</option>
+                        <option value="fixed">Fixed</option>
+                        <option value="hourly">Hourly</option>
+                        <option value="blended">Blended</option>
+                    </select>
+                </div>
+                <x-field name="posted_terms_summary" label="Posted terms summary" />
             </section>
 
             <section class="space-y-4">

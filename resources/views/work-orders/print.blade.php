@@ -42,6 +42,7 @@
         <section>
             <h2>Scope Safeguards</h2>
             <p class="muted">Scope clarity: {{ str_replace('_', ' ', $workOrder->scope_clarity_status) }}</p>
+            <p class="muted">Technician level: {{ $workOrder->technicianLevel()['name'] }}</p>
             @if (is_array($workOrder->risk_flags) && $workOrder->risk_flags)
                 <p class="muted">Risk flags: {{ collect($workOrder->risk_flags)->map(fn ($flag) => str_replace('_', ' ', $flag))->implode(', ') }}</p>
             @endif

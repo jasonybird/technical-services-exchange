@@ -198,4 +198,11 @@ class WorkOrder extends Model
             ->whereIn('event_type', ['contact_failed', 'support_unavailable', 'site_contact_unavailable'])
             ->count();
     }
+
+    public function technicianLevel(): array
+    {
+        $level = $this->scopeSnapshotValue('required_technician_level') ?? $this->jobPost?->required_technician_level ?? 1;
+
+        return config('technician-levels')[(int) $level] ?? config('technician-levels')[1];
+    }
 }

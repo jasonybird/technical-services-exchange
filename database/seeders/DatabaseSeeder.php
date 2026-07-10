@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\JobPost;
+use App\Models\TaxonomyTerm;
 use App\Models\WorkOrder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -19,6 +20,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $taxonomy = $this->seedTaxonomy();
+
         $roles = ['admin', 'provider', 'buyer'];
 
         foreach ($roles as $role) {
@@ -60,6 +63,7 @@ class DatabaseSeeder extends Seeder
                 'headline' => 'POS, networking, cabling, and onsite IT support',
                 'bio' => 'Demo provider profile for the technician-owned exchange.',
                 'service_area' => 'Central US with regional travel',
+                'max_technician_level' => 3,
                 'skills' => "POS\nNetworking\nStructured cabling\nPrinter support",
                 'services' => [
                     ['name' => 'Smart hands dispatch', 'level' => 'experienced'],
@@ -91,6 +95,15 @@ class DatabaseSeeder extends Seeder
                 ],
             ]
         );
+
+        $providerProfile->taxonomyTerms()->syncWithoutDetaching([
+            $taxonomy['categories']['point-of-sale']->id => ['evidence_source' => 'self_declared'],
+            $taxonomy['categories']['server-networking']->id => ['evidence_source' => 'self_declared'],
+            $taxonomy['specialties']['pos']->id => ['evidence_source' => 'self_declared'],
+            $taxonomy['specialties']['wireless-networking']->id => ['evidence_source' => 'self_declared'],
+            $taxonomy['skills']['well-tooled-mobile']->id => ['evidence_source' => 'self_declared'],
+            $taxonomy['tools']['cable-tester']->id => ['evidence_source' => 'self_declared'],
+        ]);
 
         $providerProfile->externalImports()->updateOrCreate(
             ['platform' => 'Field Nation', 'external_id' => '172-630'],
@@ -140,14 +153,27 @@ class DatabaseSeeder extends Seeder
                 'buyer_id' => $buyer->id,
                 'status' => 'assigned',
                 'service_category' => 'POS',
+                'work_category_id' => $taxonomy['categories']['point-of-sale']->id,
+                'work_specialty_id' => $taxonomy['specialties']['pos']->id,
+                'required_technician_level' => 3,
+                'work_mode' => 'onsite',
+                'pay_type' => 'fixed',
+                'posted_terms_summary' => 'Two-hour minimum plus travel if needed',
                 'location' => 'Tulsa, OK',
                 'time_window' => 'Morning',
                 'scope' => 'Troubleshoot intermittent POS terminal connectivity.',
+                'primary_objective' => 'Restore intermittent POS terminal connectivity.',
+                'included_work' => 'Inspect lane cabling, network path, and terminal connectivity.',
+                'excluded_work' => 'No electrical work or ceiling cabling unless accepted as a change request.',
+                'closeout_conditions' => 'Buyer validates that the terminal remains online.',
                 'required_skills' => 'POS and basic networking',
                 'required_tools' => 'Laptop, patch cables, toner/probe',
                 'deliverables' => "Check in\nPhotos\nResolution notes",
                 'payment_terms' => 'Direct buyer/provider payment terms.',
                 'vendor_onboarding' => 'Buyer handles direct onboarding.',
+                'contact_certified' => true,
+                'scope_clarity_status' => 'clear',
+                'risk_flags' => [],
                 'visibility' => 'public',
             ]
         );
@@ -174,6 +200,10 @@ class DatabaseSeeder extends Seeder
                 'deliverables_checklist' => $job->deliverables,
                 'scheduled_at' => $job->starts_at,
                 'appointment_window' => $job->time_window,
+                'scope_snapshot' => $job->scopeSnapshot(),
+                'contact_snapshot' => $job->contactSnapshot(),
+                'scope_clarity_status' => $job->scope_clarity_status,
+                'risk_flags' => $job->risk_flags,
                 'checklist_items' => ['Check in', 'Photos', 'Resolution notes'],
                 'required_evidence' => $job->deliverables,
                 'evidence_rules' => ['Arrival photo', 'Completion photo'],
@@ -195,5 +225,112 @@ class DatabaseSeeder extends Seeder
                 'evidence_notes' => 'Screenshots, chat, and deliverable notes would be attached here later.',
             ]
         );
+    }
+
+    private function seedTaxonomy(): array
+    {
+        $categories = [
+            'access-alarms' => 'Access & Alarms',
+            'av-digital-signage' => 'A/V & Digital Signage',
+            'cameras' => 'Cameras',
+            'ev-equipment' => 'EV Equipment',
+            'fiber-cabling' => 'Fiber Cabling',
+            'kiosk-atm' => 'Kiosk / ATM',
+            'low-voltage-cabling' => 'Low Voltage Cabling',
+            'office-equipment' => 'Office Equipment',
+            'point-of-sale' => 'Point of Sale',
+            'retail-services' => 'Retail Services',
+            'server-networking' => 'Server & Networking',
+            'telecom' => 'Telecom',
+            'other-trades' => 'Other Trades',
+        ];
+
+        $specialties = [
+            'pos' => ['Point of Sale', 'point-of-sale'],
+            'self-checkout' => ['Self-checkout', 'point-of-sale'],
+            'networking' => ['Networking', 'server-networking'],
+            'wireless-networking' => ['Wireless networking', 'server-networking'],
+            'server-storage' => ['Server/storage', 'server-networking'],
+            'low-voltage-runs' => ['Low voltage runs', 'low-voltage-cabling'],
+            'low-voltage-testing' => ['Low voltage testing', 'low-voltage-cabling'],
+            'fiber-testing' => ['Fiber testing', 'fiber-cabling'],
+            'pots' => ['POTS', 'telecom'],
+            'voip-sip' => ['VoIP/SIP', 'telecom'],
+            'digital-signage' => ['Digital signage', 'av-digital-signage'],
+            'ip-camera' => ['IP camera', 'cameras'],
+            'printer' => ['Printer', 'office-equipment'],
+        ];
+
+        $skills = [
+            'well-tooled-mobile' => 'Well-tooled mobile',
+            'well-prepared' => 'Well-prepared',
+            'well-experienced' => 'Well-experienced',
+            'smart-hands-ready' => 'Smart-hands ready',
+            'independent-installer' => 'Independent installer',
+            'field-troubleshooter' => 'Field troubleshooter',
+        ];
+
+        $tools = [
+            'laptop' => 'Laptop',
+            'cable-tester' => 'Cable tester',
+            'toner-probe' => 'Toner/probe',
+            'labeler' => 'Labeler',
+            'basic-hand-tools' => 'Basic hand tools',
+        ];
+
+        $certifications = [
+            'low-voltage-license' => 'Low-voltage license',
+            'comptia-a-plus' => 'CompTIA A+',
+            'network-plus' => 'Network+',
+            'manufacturer-certification' => 'Manufacturer certification',
+        ];
+
+        $categoryRecords = [];
+        foreach ($categories as $slug => $name) {
+            $categoryRecords[$slug] = TaxonomyTerm::updateOrCreate(
+                ['type' => 'work_category', 'slug' => $slug],
+                ['name' => $name, 'sort_order' => count($categoryRecords) + 1, 'is_active' => true]
+            );
+        }
+
+        $specialtyRecords = [];
+        foreach ($specialties as $slug => [$name, $parentSlug]) {
+            $specialtyRecords[$slug] = TaxonomyTerm::updateOrCreate(
+                ['type' => 'work_specialty', 'slug' => $slug],
+                ['name' => $name, 'parent_id' => $categoryRecords[$parentSlug]->id ?? null, 'sort_order' => count($specialtyRecords) + 1, 'is_active' => true]
+            );
+        }
+
+        $skillRecords = [];
+        foreach ($skills as $slug => $name) {
+            $skillRecords[$slug] = TaxonomyTerm::updateOrCreate(
+                ['type' => 'skill', 'slug' => $slug],
+                ['name' => $name, 'sort_order' => count($skillRecords) + 1, 'is_active' => true]
+            );
+        }
+
+        $toolRecords = [];
+        foreach ($tools as $slug => $name) {
+            $toolRecords[$slug] = TaxonomyTerm::updateOrCreate(
+                ['type' => 'tool', 'slug' => $slug],
+                ['name' => $name, 'sort_order' => count($toolRecords) + 1, 'is_active' => true]
+            );
+        }
+
+        $certificationRecords = [];
+        foreach ($certifications as $slug => $name) {
+            $certificationRecords[$slug] = TaxonomyTerm::updateOrCreate(
+                ['type' => 'certification', 'slug' => $slug],
+                ['name' => $name, 'sort_order' => count($certificationRecords) + 1, 'is_active' => true]
+            );
+        }
+
+        return [
+            'categories' => $categoryRecords,
+            'specialties' => $specialtyRecords,
+            'skills' => $skillRecords,
+            'tools' => $toolRecords,
+            'certifications' => $certificationRecords,
+        ];
     }
 }

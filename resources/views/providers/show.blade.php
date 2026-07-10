@@ -18,6 +18,12 @@
                 @if ($profile->insurance_status)
                     <x-badge tone="sky">{{ $profile->insurance_status }}</x-badge>
                 @endif
+                <x-badge tone="sky">{{ $profile->technicianLevel()['name'] }}</x-badge>
+            </div>
+            <div class="mt-4 rounded-md border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-100">
+                <p class="font-semibold">{{ $profile->technicianLevel()['short_name'] }}</p>
+                <p class="mt-1">{{ $profile->technicianLevel()['description'] }}</p>
+                <p class="mt-2 text-xs">Level and tags are self-declared unless supported by buyer endorsements, completed TSE work, certification proof, or admin verification.</p>
             </div>
 
             @if ($profile->visible('bio'))
@@ -25,6 +31,16 @@
             @endif
 
             <dl class="mt-6 grid gap-4 md:grid-cols-2">
+                <div>
+                    <dt class="text-sm text-slate-500 dark:text-slate-400">Tags and evidence</dt>
+                    <dd class="mt-2 flex flex-wrap gap-2">
+                        @forelse ($profile->taxonomyTerms as $term)
+                            <x-badge tone="slate">{{ $term->name }}{{ $term->pivot?->evidence_source ? ' | '.str_replace('_', ' ', $term->pivot->evidence_source) : '' }}</x-badge>
+                        @empty
+                            <span class="text-sm text-slate-600 dark:text-slate-400">No taxonomy tags yet.</span>
+                        @endforelse
+                    </dd>
+                </div>
                 @if ($profile->visible('services'))
                     <div>
                         <dt class="text-sm text-slate-500 dark:text-slate-400">Services</dt>

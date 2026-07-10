@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
     'buyer_id', 'title', 'status', 'service_category', 'location', 'starts_at',
-    'time_window', 'schedule_type', 'remote_eligible', 'scope', 'primary_objective',
+    'work_category_id', 'work_specialty_id', 'required_technician_level', 'work_mode',
+    'pay_type', 'posted_terms_summary', 'time_window', 'schedule_type', 'remote_eligible', 'scope', 'primary_objective',
     'included_work', 'excluded_work', 'maximum_onsite_expectations', 'expected_duration',
     'required_skills', 'required_tools', 'required_certifications', 'required_safety_gear',
     'deliverables', 'closeout_conditions', 'buyer_provided_equipment',
@@ -38,6 +39,7 @@ class JobPost extends Model
     {
         return [
             'starts_at' => 'datetime',
+            'required_technician_level' => 'integer',
             'remote_eligible' => 'boolean',
             'risk_flags' => 'array',
             'contact_certified' => 'boolean',
@@ -48,6 +50,16 @@ class JobPost extends Model
     public function buyer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'buyer_id');
+    }
+
+    public function workCategory(): BelongsTo
+    {
+        return $this->belongsTo(TaxonomyTerm::class, 'work_category_id');
+    }
+
+    public function workSpecialty(): BelongsTo
+    {
+        return $this->belongsTo(TaxonomyTerm::class, 'work_specialty_id');
     }
 
     public function quotes(): HasMany
@@ -95,6 +107,10 @@ class JobPost extends Model
             'parking_access_notes' => $this->parking_access_notes,
             'onsite_restrictions' => $this->onsite_restrictions,
             'supplemental_instructions' => $this->supplemental_instructions,
+            'required_technician_level' => $this->required_technician_level,
+            'technician_level' => $this->technicianLevel()['name'],
+            'work_category' => $this->workCategory?->name,
+            'work_specialty' => $this->workSpecialty?->name,
         ];
     }
 
@@ -152,6 +168,10 @@ class JobPost extends Model
             $flags[] = 'compressed_schedule';
         }
 
+        if ((int) $this->required_technician_level <= 1 && ($this->required_certifications || str_contains(strtolower((string) $this->primary_objective.' '.$this->included_work), 'troubleshoot'))) {
+            $flags[] = 'level_scope_mismatch';
+        }
+
         return array_values(array_unique($flags));
     }
 
@@ -172,5 +192,10 @@ class JobPost extends Model
         }
 
         return 'clear';
+    }
+
+    public function technicianLevel(): array
+    {
+        return config('technician-levels')[(int) $this->required_technician_level] ?? config('technician-levels')[1];
     }
 }

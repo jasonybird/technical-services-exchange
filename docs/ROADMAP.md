@@ -16,6 +16,9 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 - Structured job scope, scope clarity status, risk badges, and anti-catch-all supplemental instruction guardrails.
 - Buyer contact/support certification, work-order contact snapshots, and provider contact/support failure logging.
 - First-class work-order change requests with reason codes, impact fields, status lifecycle, and print-packet visibility.
+- Dense available-work board with filters for category, technician level, scope clarity, support certification, remote eligibility, and risk suppression.
+- Normalized starter taxonomy for work categories, specialties, skills, tools, certifications, and provider tag evidence sources.
+- Explicit technician level ladder from smart hands through project lead.
 - Configurable attachment storage policy with upload root, disk, size cap, MIME allowlist, image previews, file metadata, and deletion.
 - Mutual reviews with category metrics.
 - Peer-review disputes with comments, evidence, structured recommendations, and public vote breakdowns.
@@ -46,18 +49,18 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 7. Contact accountability and support availability: certified contacts, support windows, event logs for failed support/contact attempts, and contact reliability evidence.
 8. API/mobile prep: token-scoped endpoints, versioned API resources, geolocation check-in groundwork, and mobile-safe work-order actions.
 9. Import tooling: guided manual imports for Field Nation, WorkMarket, and similar profile/review history.
-10. Competency tags and levels: provider/buyer tag taxonomies, smart-hands entry lane, specialty tags such as network, POTS, POS, AV, cabling, installer, and troubleshooter, plus earned level badges based on completed work and reputation signals.
+10. Post-work verification: buyer endorsement or disagreement with provider level/tags after completed work orders, earned evidence upgrades, and transparent tag history.
 11. Admin operations: audit logs, queue health, system status, content moderation, and backup/export workflows.
 12. Deployment hardening: production environment docs, queue worker setup, scheduler setup, storage policy, and server provisioning notes.
 13. License and runtime audit: generate and review PHP and JavaScript dependency license reports before adding external theme kits, map any risky package to a replacement, and keep required local/runtime extensions such as `pdo_sqlite` documented for testability.
 
 ## Phase Checkpoint
 
-Phases 1-7 have been implemented locally. Phases 1-5 have been shipped through the local -> GitHub -> ChristIT update workflow. Phase 6/7 is ready for the next ship/update pass. The next active planning block is:
+Phases 1-9 have been implemented locally through the combined Phase 8/9 marketplace matching pass. The next active planning block is:
 
 8. API/mobile prep: token-scoped endpoints, versioned API resources, geolocation check-in groundwork, contact/support failure logging, and mobile-safe work-order actions.
 9. Import tooling: guided manual imports for Field Nation, WorkMarket, and similar profile/review history.
-10. Competency tags and levels: provider/buyer tag taxonomies, smart-hands entry lane, specialty tags such as network, POTS, POS, AV, cabling, installer, and troubleshooter, plus earned level badges based on completed work and reputation signals.
+10. Post-work verification: buyer endorsement or disagreement with provider level/tags after completed work orders, earned evidence upgrades, and transparent tag history.
 
 Work-order safeguards to carry into the next implementation passes:
 
@@ -94,6 +97,22 @@ Phase 6/7 implementation completed:
 - Providers can log contact failed, support unavailable, site contact unavailable, or contact reached events with channel, time, result, and notes.
 - Work-order print packets include scope safeguards, contact/support coverage, change requests, and contact/support events.
 - Disputes and peer votes now support reason codes such as scope expansion, unreachable contact, support unavailable, payment issue, and insufficient evidence.
+
+Phase 8/9 implementation completed:
+
+- The available jobs page is now a dense marketplace board with compact filters for work category, technician level, scope clarity, support certification, remote eligibility, and hide-risky mode.
+- Job rows expose buyer, location, category, specialty, requested technician level, schedule, pay type, posted terms summary, quote count, scope clarity, support certification, and risk badges.
+- Technician levels are defined in `config/technician-levels.php`:
+  - Level 1 smart hands,
+  - Level 2 installer,
+  - Level 3 troubleshooter,
+  - Level 4 specialist,
+  - Level 5 project lead.
+- Buyer job creation now requires a technician level and work mode, and can select normalized category/specialty plus pay type and posted terms summary.
+- The app now has normalized taxonomy terms for work categories, specialties, skills, tools, and certifications.
+- Provider profiles can declare a maximum technician level and self-declared taxonomy tags.
+- Provider directory filters can match technician level and taxonomy tags.
+- Taxonomy tag pivots track an evidence source, currently `self_declared`, with room for buyer endorsed, completed work, certification verified, and admin verified evidence.
 
 Available-work safeguards to carry into directory and job-list phases:
 

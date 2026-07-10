@@ -4,6 +4,7 @@
     $certsText = collect($profile?->certification_records ?? [])->map(fn ($row) => trim(($row['name'] ?? '').' | '.($row['issuer'] ?? ''), ' |'))->implode("\n");
     $visibility = $profile?->profile_visibility ?? [];
     $visible = fn (string $field): bool => (bool) ($visibility[$field] ?? true);
+    $selectedTaxonomy = $profile?->taxonomyTerms?->pluck('id')->all() ?? [];
 @endphp
 
 <x-app-layout>
@@ -22,7 +23,28 @@
             <x-field name="headline" label="Headline" :value="$profile?->headline" />
             <x-field name="bio" label="Bio" :value="$profile?->bio" textarea />
             <x-field name="service_area" label="Service area" :value="$profile?->service_area" />
+            <div>
+                <label for="max_technician_level" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Maximum technician level</label>
+                <select id="max_technician_level" name="max_technician_level" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    @foreach ($technicianLevels as $level => $definition)
+                        <option value="{{ $level }}" @selected((int) ($profile?->max_technician_level ?? 1) === $level)>{{ $definition['name'] }}</option>
+                    @endforeach
+                </select>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">This is self-declared until native work history, buyer endorsements, certifications, or admin verification support it.</p>
+            </div>
             <x-field name="skills" label="Skills summary" :value="$profile?->skills" textarea />
+            <div class="rounded-md border border-slate-200 p-4 dark:border-slate-800">
+                <h3 class="font-semibold text-slate-950 dark:text-white">Self-declared tags and evidence</h3>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Choose categories, specialties, skills, tools, and certifications that describe your work. Later passes can let buyers endorse or challenge these after completed work orders.</p>
+                <div class="mt-3 grid gap-2 md:grid-cols-2">
+                    @foreach ($taxonomyTerms as $term)
+                        <label class="inline-flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700 dark:border-slate-800 dark:text-slate-300">
+                            <input type="checkbox" name="taxonomy_terms[]" value="{{ $term->id }}" @checked(in_array($term->id, $selectedTaxonomy, true)) class="rounded border-slate-300 text-sky-600 shadow-sm focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950">
+                            <span>{{ $term->name }} <span class="text-xs text-slate-500">({{ str_replace('_', ' ', $term->type) }})</span></span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
             <x-field name="services_text" label="Structured services" :value="$servicesText" textarea help="One per line. Use: service name | level, for example POS install | experienced." />
             <x-field name="tools" label="Tools and equipment summary" :value="$profile?->tools" textarea />
             <x-field name="tool_inventory_text" label="Tool inventory" :value="$toolsText" textarea help="One per line. Use: tool name | category, for example Cable tester | network." />

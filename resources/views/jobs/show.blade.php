@@ -7,6 +7,10 @@
                     <p class="text-sm text-gray-500">{{ $job->location }} | {{ $job->service_category }} | {{ $job->status }}</p>
                     <div class="mt-3 flex flex-wrap gap-2">
                         <x-badge tone="{{ $job->scope_clarity_status === 'clear' ? 'emerald' : 'amber' }}">Scope {{ str_replace('_', ' ', $job->scope_clarity_status) }}</x-badge>
+                        <x-badge tone="sky">{{ $job->technicianLevel()['name'] }}</x-badge>
+                        @if ($job->workCategory)
+                            <x-badge tone="slate">{{ $job->workCategory->name }}</x-badge>
+                        @endif
                         @if ($job->contact_certified)
                             <x-badge tone="emerald">Support certified</x-badge>
                         @else
@@ -20,6 +24,7 @@
                 <div class="text-sm text-slate-600 dark:text-slate-400 sm:text-right">
                     <p>{{ $job->starts_at?->format('M j, Y g:i A') ?? 'No start set' }}</p>
                     <p>{{ $job->time_window ?: 'No window set' }} | {{ str_replace('_', ' ', $job->schedule_type ?: 'schedule not set') }}</p>
+                    <p>{{ str_replace('_', ' ', $job->work_mode ?: 'onsite') }} | {{ str_replace('_', ' ', $job->pay_type ?: 'pay not listed') }}</p>
                 </div>
             </div>
 
@@ -41,6 +46,8 @@
 
             <dl class="mt-6 grid gap-4 md:grid-cols-2">
                 <div><dt class="text-sm text-gray-500">Primary objective</dt><dd class="whitespace-pre-line">{{ $job->primary_objective ?: $job->scope }}</dd></div>
+                <div><dt class="text-sm text-gray-500">Technician level</dt><dd class="whitespace-pre-line">{{ $job->technicianLevel()['description'] }}</dd></div>
+                <div><dt class="text-sm text-gray-500">Level scope rule</dt><dd class="whitespace-pre-line">{{ $job->technicianLevel()['scope_rule'] }}</dd></div>
                 <div><dt class="text-sm text-gray-500">Expected duration</dt><dd class="whitespace-pre-line">{{ $job->expected_duration ?: 'Not specified' }}</dd></div>
                 <div><dt class="text-sm text-gray-500">Included work</dt><dd class="whitespace-pre-line">{{ $job->included_work ?: 'Not specified' }}</dd></div>
                 <div><dt class="text-sm text-gray-500">Excluded work</dt><dd class="whitespace-pre-line">{{ $job->excluded_work ?: 'Not specified' }}</dd></div>

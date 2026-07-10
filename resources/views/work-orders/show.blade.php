@@ -68,6 +68,7 @@
                 </div>
                 <div class="flex flex-wrap gap-2">
                     <x-badge tone="{{ $workOrder->scope_clarity_status === 'clear' ? 'emerald' : 'amber' }}">Scope {{ str_replace('_', ' ', $workOrder->scope_clarity_status) }}</x-badge>
+                    <x-badge tone="sky">{{ $workOrder->technicianLevel()['name'] }}</x-badge>
                     @if ($workOrder->contactSnapshotValue('contact_certified'))
                         <x-badge tone="emerald">Support certified</x-badge>
                     @else

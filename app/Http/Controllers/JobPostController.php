@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\JobPost;
+use App\Models\TaxonomyTerm;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -11,7 +12,8 @@ class JobPostController extends Controller
 {
     public function index(Request $request): View
     {
-        $jobs = JobPost::with('buyer.buyerProfile', 'attachments', 'ratings.user');
+        $jobs = JobPost::with('buyer.buyerProfile', 'workCategory', 'workSpecialty', 'attachments', 'ratings.user')
+            ->withCount('quotes');
 
         if ($search = $request->string('q')->toString()) {
             $jobs->where(fn ($query) => $query
@@ -26,8 +28,35 @@ class JobPostController extends Controller
             $jobs->where('status', $status);
         }
 
+        if ($category = $request->integer('work_category_id')) {
+            $jobs->where('work_category_id', $category);
+        }
+
+        if ($level = $request->integer('technician_level')) {
+            $jobs->where('required_technician_level', '<=', $level);
+        }
+
+        if ($scope = $request->string('scope_clarity')->toString()) {
+            $jobs->where('scope_clarity_status', $scope);
+        }
+
+        if ($request->boolean('support_certified')) {
+            $jobs->where('contact_certified', true);
+        }
+
+        if ($request->boolean('remote_only')) {
+            $jobs->where(fn ($query) => $query->where('remote_eligible', true)->orWhere('work_mode', 'remote'));
+        }
+
+        if ($request->boolean('hide_risky')) {
+            $jobs->where(fn ($query) => $query->whereNull('risk_flags')->orWhereJsonLength('risk_flags', 0));
+        }
+
         return view('jobs.index', [
             'jobs' => $jobs->latest()->paginate(20)->withQueryString(),
+            'categories' => TaxonomyTerm::where('type', 'work_category')->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
+            'technicianLevels' => config('technician-levels'),
+            'filters' => $request->only(['q', 'status', 'work_category_id', 'technician_level', 'scope_clarity', 'support_certified', 'remote_only', 'hide_risky']),
         ]);
     }
 
@@ -35,7 +64,11 @@ class JobPostController extends Controller
     {
         abort_unless($request->user()->hasRole('buyer'), 403);
 
-        return view('jobs.create');
+        return view('jobs.create', [
+            'categories' => TaxonomyTerm::where('type', 'work_category')->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
+            'specialties' => TaxonomyTerm::where('type', 'work_specialty')->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
+            'technicianLevels' => config('technician-levels'),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -45,6 +78,12 @@ class JobPostController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'service_category' => ['nullable', 'string', 'max:255'],
+            'work_category_id' => ['nullable', 'integer', 'exists:taxonomy_terms,id'],
+            'work_specialty_id' => ['nullable', 'integer', 'exists:taxonomy_terms,id'],
+            'required_technician_level' => ['required', 'integer', 'min:1', 'max:5'],
+            'work_mode' => ['required', 'string', 'in:onsite,remote,hybrid'],
+            'pay_type' => ['nullable', 'string', 'in:fixed,hourly,blended,not_listed'],
+            'posted_terms_summary' => ['nullable', 'string', 'max:255'],
             'location' => ['required', 'string', 'max:255'],
             'starts_at' => ['nullable', 'date'],
             'time_window' => ['nullable', 'string', 'max:255'],
@@ -110,6 +149,8 @@ class JobPostController extends Controller
         return view('jobs.show', [
             'job' => $job->load(
                 'buyer.buyerProfile',
+                'workCategory',
+                'workSpecialty',
                 'quotes.provider.providerProfile',
                 'quotes.revisions.user',
                 'workOrder',

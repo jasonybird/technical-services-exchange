@@ -28,6 +28,24 @@
                     <input id="skill" name="skill" value="{{ $filters['skill'] ?? '' }}" placeholder="POS, network, cabling" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
                 </div>
                 <div>
+                    <label for="technician_level" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Technician level</label>
+                    <select id="technician_level" name="technician_level" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                        <option value="">Any level</option>
+                        @foreach ($technicianLevels as $level => $definition)
+                            <option value="{{ $level }}" @selected((int) ($filters['technician_level'] ?? 0) === $level)>{{ $definition['name'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="taxonomy_term_id" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Tag</label>
+                    <select id="taxonomy_term_id" name="taxonomy_term_id" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                        <option value="">Any tag</option>
+                        @foreach ($taxonomyTerms as $term)
+                            <option value="{{ $term->id }}" @selected((int) ($filters['taxonomy_term_id'] ?? 0) === $term->id)>{{ $term->name }} ({{ str_replace('_', ' ', $term->type) }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
                     <label for="insurance" class="block text-sm font-medium text-slate-800 dark:text-slate-200">Insurance</label>
                     <input id="insurance" name="insurance" value="{{ $filters['insurance'] ?? '' }}" placeholder="Insured, COI available" class="mt-1 block w-full rounded-md border-slate-300 bg-white text-slate-950 shadow-sm focus:border-sky-500 focus:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
                 </div>
@@ -65,6 +83,9 @@
                 @if (request()->boolean('public_contact'))
                     <x-badge tone="emerald">Public contact</x-badge>
                 @endif
+                @if (! empty($filters['technician_level']))
+                    <x-badge tone="sky">Level: {{ $technicianLevels[(int) $filters['technician_level']]['short_name'] ?? $filters['technician_level'] }}</x-badge>
+                @endif
             </div>
         </div>
 
@@ -90,6 +111,7 @@
                         @if ($profile->service_area)
                             <x-badge tone="slate">{{ $profile->service_area }}</x-badge>
                         @endif
+                        <x-badge tone="sky">{{ $profile->technicianLevel()['short_name'] }}</x-badge>
                         @if ($profile->public_contact)
                             <x-badge tone="emerald">Public contact</x-badge>
                         @endif
@@ -106,6 +128,13 @@
 
                     @if ($profile->skills)
                         <p class="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-400">{{ \Illuminate\Support\Str::limit($profile->skills, 220) }}</p>
+                    @endif
+                    @if ($profile->taxonomyTerms->isNotEmpty())
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            @foreach ($profile->taxonomyTerms->take(8) as $term)
+                                <x-badge tone="slate">{{ $term->name }}</x-badge>
+                            @endforeach
+                        </div>
                     @endif
                 </a>
             @empty

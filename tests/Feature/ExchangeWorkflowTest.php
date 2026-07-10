@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\JobPost;
 use App\Models\ProviderProfile;
 use App\Models\SocialPost;
+use App\Models\TaxonomyTerm;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Notifications\ExchangeEventNotification;
@@ -26,6 +27,7 @@ class ExchangeWorkflowTest extends TestCase
         $this->actingAs($provider)->put('/provider-profile', [
             'business_name' => 'Provider LLC',
             'service_area' => 'Oklahoma',
+            'max_technician_level' => 2,
         ])->assertRedirect('/provider-profile');
 
         $this->actingAs($buyer)->put('/buyer-profile', [
@@ -235,6 +237,8 @@ class ExchangeWorkflowTest extends TestCase
         $this->actingAs($buyer)->post('/jobs', [
             'title' => 'Replace POS lane router',
             'service_category' => 'Point of Sale',
+            'required_technician_level' => 3,
+            'work_mode' => 'onsite',
             'location' => 'Tulsa, OK',
             'starts_at' => now()->addDays(3)->format('Y-m-d H:i:s'),
             'time_window' => '9 AM - 12 PM',
@@ -399,6 +403,7 @@ class ExchangeWorkflowTest extends TestCase
         $this->actingAs($provider)->put('/provider-profile', [
             'business_name' => 'Structured Provider',
             'bio' => 'Public bio.',
+            'max_technician_level' => 3,
             'services_text' => "Smart hands | entry\nNetwork troubleshooting | advanced",
             'tool_inventory_text' => "Cable tester | network\nTone probe | cabling",
             'certification_records_text' => "Low voltage license | Oklahoma\nA+ | CompTIA",
@@ -425,6 +430,48 @@ class ExchangeWorkflowTest extends TestCase
             ->assertSee('Cable tester')
             ->assertSee('Low voltage license')
             ->assertDontSee('Internal only');
+    }
+
+    public function test_provider_taxonomy_tags_and_technician_level_can_filter_directory(): void
+    {
+        $provider = $this->userWithRole('provider');
+        $networkTag = TaxonomyTerm::create([
+            'type' => 'skill',
+            'name' => 'Field troubleshooter',
+            'slug' => 'field-troubleshooter',
+        ]);
+
+        $this->actingAs($provider)->put('/provider-profile', [
+            'business_name' => 'Tagged Provider',
+            'service_area' => 'Tulsa',
+            'max_technician_level' => 3,
+            'skills' => 'Network and POS troubleshooting',
+            'taxonomy_terms' => [$networkTag->id],
+            'profile_visibility' => [
+                'bio' => '1',
+                'services' => '1',
+                'tools' => '1',
+                'certifications' => '1',
+                'rate_card' => '1',
+                'availability' => '1',
+                'imports' => '1',
+            ],
+        ])->assertRedirect('/provider-profile');
+
+        $profile = $provider->providerProfile()->firstOrFail();
+
+        $this->assertSame(3, $profile->max_technician_level);
+        $this->assertDatabaseHas('provider_profile_taxonomy_term', [
+            'provider_profile_id' => $profile->id,
+            'taxonomy_term_id' => $networkTag->id,
+            'evidence_source' => 'self_declared',
+        ]);
+
+        $this->get('/providers?technician_level=3&taxonomy_term_id='.$networkTag->id)
+            ->assertOk()
+            ->assertSee('Tagged Provider')
+            ->assertSee('Troubleshooter')
+            ->assertSee('Field troubleshooter');
     }
 
     public function test_buyer_directory_can_filter_and_sort_profiles(): void
@@ -495,6 +542,57 @@ class ExchangeWorkflowTest extends TestCase
             ->assertSee('Direct ACH')
             ->assertSee('Tulsa office')
             ->assertDontSee('Buyer internal note');
+    }
+
+    public function test_available_work_board_filters_by_category_level_and_safety_signals(): void
+    {
+        $buyer = $this->userWithRole('buyer');
+        $category = TaxonomyTerm::create([
+            'type' => 'work_category',
+            'name' => 'Point of Sale',
+            'slug' => 'point-of-sale',
+        ]);
+
+        JobPost::create([
+            'buyer_id' => $buyer->id,
+            'title' => 'Clear POS troubleshooting',
+            'status' => 'open',
+            'service_category' => 'POS',
+            'work_category_id' => $category->id,
+            'required_technician_level' => 3,
+            'work_mode' => 'onsite',
+            'location' => 'Tulsa, OK',
+            'scope' => 'Troubleshoot POS issue.',
+            'primary_objective' => 'Find POS connectivity fault.',
+            'included_work' => 'Test cabling and terminal connectivity.',
+            'excluded_work' => 'No electrical work.',
+            'deliverables' => 'Photos and notes',
+            'closeout_conditions' => 'Buyer validates terminal online.',
+            'contact_certified' => true,
+            'scope_clarity_status' => 'clear',
+            'risk_flags' => [],
+            'visibility' => 'public',
+        ]);
+
+        JobPost::create([
+            'buyer_id' => $buyer->id,
+            'title' => 'Risky smart hands dump',
+            'status' => 'open',
+            'service_category' => 'Other',
+            'required_technician_level' => 1,
+            'work_mode' => 'onsite',
+            'location' => 'OKC, OK',
+            'scope' => 'Do everything onsite.',
+            'scope_clarity_status' => 'needs_review',
+            'risk_flags' => ['missing_scope_boundaries'],
+            'visibility' => 'public',
+        ]);
+
+        $this->get('/jobs?work_category_id='.$category->id.'&technician_level=3&scope_clarity=clear&support_certified=1&hide_risky=1')
+            ->assertOk()
+            ->assertSee('Clear POS troubleshooting')
+            ->assertSee('Troubleshooter')
+            ->assertDontSee('Risky smart hands dump');
     }
 
     public function test_invalid_work_order_transition_is_rejected(): void
