@@ -115,5 +115,65 @@
                 @endforelse
             </div>
         </section>
+
+        <section class="rounded border bg-white p-6">
+            <h3 class="font-semibold">Moderation reports</h3>
+            <p class="mt-1 text-sm text-gray-600">Reports are triage records for profiles, jobs, and attachments. They do not delete or hide content by themselves.</p>
+            <div class="mt-4 space-y-4">
+                @forelse ($moderationReports as $report)
+                    <div class="rounded border bg-gray-50 p-4 text-sm">
+                        <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                                <p class="font-semibold">{{ class_basename($report->reportable_type) }} #{{ $report->reportable_id }} | {{ \App\Models\ModerationReport::REASON_CODES[$report->reason_code] ?? $report->reason_code }}</p>
+                                <p class="mt-1 text-gray-600">Reported by {{ $report->reporter->name }} | {{ $report->status }} | {{ $report->created_at->diffForHumans() }}</p>
+                                <p class="mt-2 whitespace-pre-line text-gray-700">{{ $report->details }}</p>
+                            </div>
+                            <form method="POST" action="{{ route('moderation-reports.moderate', $report) }}" class="grid min-w-72 gap-2">
+                                @csrf
+                                @method('PATCH')
+                                <label class="text-xs font-semibold text-gray-600" for="report_status_{{ $report->id }}">Report status</label>
+                                <select id="report_status_{{ $report->id }}" name="status" class="rounded-md border-gray-300 text-sm">
+                                    @foreach (\App\Models\ModerationReport::STATUSES as $status)
+                                        <option value="{{ $status }}" @selected($report->status === $status)>{{ str_replace('_', ' ', ucfirst($status)) }}</option>
+                                    @endforeach
+                                </select>
+                                <textarea name="moderation_notes" rows="2" class="rounded-md border-gray-300 text-sm" placeholder="Moderation notes">{{ $report->moderation_notes }}</textarea>
+                                <x-primary-button>Save report</x-primary-button>
+                            </form>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-600">No moderation reports are waiting.</p>
+                @endforelse
+            </div>
+        </section>
+
+        <section class="rounded border bg-white p-6">
+            <h3 class="font-semibold">Recent audit log</h3>
+            <div class="mt-4 overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <thead>
+                        <tr class="text-left text-xs uppercase text-gray-500">
+                            <th class="py-2 pr-4">When</th>
+                            <th class="py-2 pr-4">Actor</th>
+                            <th class="py-2 pr-4">Action</th>
+                            <th class="py-2 pr-4">Target</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse ($auditLogs as $log)
+                            <tr>
+                                <td class="py-2 pr-4">{{ $log->created_at->format('M j, g:i A') }}</td>
+                                <td class="py-2 pr-4">{{ $log->actor?->name ?? 'System' }}</td>
+                                <td class="py-2 pr-4">{{ str_replace('.', ' ', $log->action) }}</td>
+                                <td class="py-2 pr-4">{{ $log->auditable_type ? class_basename($log->auditable_type).' #'.$log->auditable_id : 'n/a' }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="4" class="py-3 text-gray-600">No audit records yet.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </div>
 </x-app-layout>

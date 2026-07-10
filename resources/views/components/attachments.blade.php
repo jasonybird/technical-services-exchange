@@ -29,6 +29,7 @@
                 @if ($attachment->caption)
                     <p class="mt-2 text-slate-600 dark:text-slate-400">{{ $attachment->caption }}</p>
                 @endif
+                <x-moderation-report-form type="attachment" :id="$attachment->id" />
             </div>
         @endforeach
     </div>

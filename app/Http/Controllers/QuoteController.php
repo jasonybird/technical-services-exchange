@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\JobPost;
 use App\Models\Quote;
+use App\Models\AuditLog;
 use App\Models\WorkOrder;
 use App\Notifications\ExchangeEventNotification;
 use Illuminate\Http\RedirectResponse;
@@ -138,6 +139,11 @@ class QuoteController extends Controller
                 'user_id' => $request->user()->id,
                 'at' => now()->toIso8601String(),
             ]],
+        ]);
+
+        AuditLog::record($request, 'quote.accepted', $workOrder, [
+            'quote_id' => $quote->id,
+            'job_post_id' => $quote->job_post_id,
         ]);
 
         $quote->provider->notify(new ExchangeEventNotification(

@@ -9,6 +9,7 @@ use App\Http\Controllers\DisputeController;
 use App\Http\Controllers\DisputeVoteController;
 use App\Http\Controllers\ExternalProfileImportController;
 use App\Http\Controllers\JobPostController;
+use App\Http\Controllers\ModerationReportController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProviderProfileController;
 use App\Http\Controllers\ProviderTagVerificationController;
@@ -66,8 +67,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/attachments', [AttachmentController::class, 'store'])->name('attachments.store');
     Route::delete('/attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
     Route::post('/ratings', [RatingController::class, 'store'])->name('ratings.store');
+    Route::post('/moderation-reports', [ModerationReportController::class, 'store'])->name('moderation-reports.store');
+    Route::patch('/moderation-reports/{report}', [ModerationReportController::class, 'moderate'])->name('moderation-reports.moderate');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/preferences', [NotificationController::class, 'updatePreferences'])->name('notifications.preferences');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
 

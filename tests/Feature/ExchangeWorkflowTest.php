@@ -3,6 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\JobPost;
+use App\Models\AuditLog;
+use App\Models\ModerationReport;
+use App\Models\NotificationPreference;
 use App\Models\ProviderProfile;
 use App\Models\SocialPost;
 use App\Models\TaxonomyTerm;
@@ -883,6 +886,80 @@ class ExchangeWorkflowTest extends TestCase
             ->assertRedirect();
 
         $this->assertNotNull($notification->fresh()->read_at);
+    }
+
+    public function test_notification_preferences_can_gate_event_notifications(): void
+    {
+        $user = $this->userWithRole('provider');
+
+        $this->actingAs($user)->patch('/notifications/preferences', [
+            'digest_frequency' => 'daily',
+            'quiet_hours_start' => '22:00',
+            'quiet_hours_end' => '06:00',
+            'in_app_enabled' => '1',
+            'work_order_updates' => '1',
+            'event_preferences' => [
+                'work_order_status' => '1',
+            ],
+        ])->assertRedirect();
+
+        $preference = $user->notificationPreference()->firstOrFail();
+        $this->assertSame('daily', $preference->digest_frequency);
+        $this->assertTrue($preference->allows('work_order_status'));
+        $this->assertFalse($preference->allows('review_received'));
+
+        $user->notify(new ExchangeEventNotification('Review muted', 'Body text', '/work-orders', 'review_received'));
+        $this->assertDatabaseCount('notifications', 0);
+
+        $user->notify(new ExchangeEventNotification('Work order visible', 'Body text', '/work-orders', 'work_order_status'));
+        $this->assertDatabaseCount('notifications', 1);
+    }
+
+    public function test_moderation_reports_admin_triage_and_audit_logs_work(): void
+    {
+        $reporter = $this->userWithRole('provider');
+        $admin = $this->userWithRole('admin');
+        $profileOwner = $this->userWithRole('provider');
+        $profile = $profileOwner->providerProfile()->create([
+            'business_name' => 'Reported Provider',
+        ]);
+
+        $this->actingAs($reporter)->post('/moderation-reports', [
+            'reportable_type' => 'provider_profile',
+            'reportable_id' => $profile->id,
+            'reason_code' => 'misleading',
+            'details' => 'The certification claim needs review.',
+        ])->assertRedirect();
+
+        $report = ModerationReport::firstOrFail();
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'moderation.reported',
+            'auditable_type' => ModerationReport::class,
+            'auditable_id' => $report->id,
+        ]);
+
+        $this->actingAs($admin)->get('/admin')
+            ->assertOk()
+            ->assertSee('Moderation reports')
+            ->assertSee('The certification claim needs review.')
+            ->assertSee('Recent audit log');
+
+        $this->actingAs($admin)->patch("/moderation-reports/{$report->id}", [
+            'status' => 'action_taken',
+            'moderation_notes' => 'Asked provider for proof.',
+        ])->assertRedirect('/admin');
+
+        $this->assertDatabaseHas('moderation_reports', [
+            'id' => $report->id,
+            'status' => 'action_taken',
+            'moderated_by_id' => $admin->id,
+            'moderation_notes' => 'Asked provider for proof.',
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'moderation.report_moderated',
+            'auditable_type' => ModerationReport::class,
+            'auditable_id' => $report->id,
+        ]);
     }
 
     private function userWithRole(string $role): User

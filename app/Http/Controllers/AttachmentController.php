@@ -9,6 +9,7 @@ use App\Models\ProviderProfile;
 use App\Models\SocialPost;
 use App\Models\WorkOrder;
 use App\Models\Attachment;
+use App\Models\AuditLog;
 use App\Models\BuyerProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -69,6 +70,10 @@ class AttachmentController extends Controller
         ) {
             $disk = $attachment->disk;
             $path = $attachment->path;
+            AuditLog::record($request, 'attachment.deleted', $attachment, [
+                'path' => $path,
+                'disk' => $disk,
+            ]);
             $attachment->delete();
 
             $stillReferenced = Attachment::where('disk', $disk)->where('path', $path)->exists();

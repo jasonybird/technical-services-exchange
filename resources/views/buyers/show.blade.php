@@ -65,6 +65,7 @@
             <x-attachments :attachments="$profile->attachments" />
             <x-rating-summary :ratings="$profile->ratings" />
             <x-rating-form type="buyer_profile" :id="$profile->id" category="buyer_overall" />
+            <x-moderation-report-form type="buyer_profile" :id="$profile->id" />
         </section>
     </div>
 </x-app-layout>

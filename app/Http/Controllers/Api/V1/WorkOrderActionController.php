@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Dispute;
+use App\Models\AuditLog;
 use App\Models\JobPost;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderChangeRequest;
@@ -97,6 +98,7 @@ class WorkOrderActionController extends Controller
 
         $workOrder->update($updates);
         $this->recordMobileEvent($request, $workOrder, 'status_transition', ['status' => $status]);
+        AuditLog::record($request, 'api.work_order.transitioned', $workOrder, ['status' => $status]);
         $this->notifyOtherParticipant($request, $workOrder, 'Work order updated', $request->user()->name.' changed '.$workOrder->jobPost->title.' to '.str_replace('_', ' ', $status).'.', 'work_order_status');
 
         return response()->json(['data' => $this->payload($workOrder->fresh())]);
@@ -119,6 +121,7 @@ class WorkOrderActionController extends Controller
 
         $workOrder->update(['checklist_completed' => $completed]);
         $this->recordMobileEvent($request, $workOrder, 'checklist_update', ['checklist_completed' => $completed]);
+        AuditLog::record($request, 'api.work_order.checklist_updated', $workOrder);
 
         return response()->json(['data' => $this->payload($workOrder->fresh())]);
     }
@@ -139,6 +142,7 @@ class WorkOrderActionController extends Controller
         ]);
 
         $this->recordMobileEvent($request, $workOrder, 'message_sent', ['message_id' => $message->id]);
+        AuditLog::record($request, 'api.work_order.message_sent', $message, ['work_order_id' => $workOrder->id]);
         $this->notifyOtherParticipant($request, $workOrder, 'Work order message', $request->user()->name.' sent a message on '.$workOrder->jobPost->title.'.', 'work_order_message');
 
         return response()->json(['data' => $message->load('user:id,name')], 201);
@@ -181,6 +185,7 @@ class WorkOrderActionController extends Controller
         ]);
 
         $this->recordMobileEvent($request, $workOrder, 'evidence_uploaded', ['attachment_id' => $attachment->id]);
+        AuditLog::record($request, 'api.work_order.evidence_uploaded', $attachment, ['work_order_id' => $workOrder->id]);
 
         return response()->json(['data' => $attachment], 201);
     }
@@ -210,6 +215,7 @@ class WorkOrderActionController extends Controller
         ]);
 
         $this->recordMobileEvent($request, $workOrder, 'contact_event', ['contact_event_id' => $event->id, 'event_type' => $event->event_type]);
+        AuditLog::record($request, 'api.work_order.contact_event', $event, ['work_order_id' => $workOrder->id]);
         $workOrder->buyer->notify(new ExchangeEventNotification(
             WorkOrderContactEvent::EVENT_TYPES[$event->event_type] ?? 'Contact event logged',
             $request->user()->name.' logged '.str_replace('_', ' ', $event->event_type).' on '.$workOrder->jobPost->title.'.',
@@ -236,6 +242,7 @@ class WorkOrderActionController extends Controller
             'estimated_arrival_at' => $data['estimated_arrival_at'],
             'reason' => $data['reason'] ?? null,
         ]);
+        AuditLog::record($request, 'api.work_order.running_late', $event, ['work_order_id' => $workOrder->id]);
 
         $workOrder->buyer->notify(new ExchangeEventNotification(
             'Provider running late',
@@ -269,6 +276,7 @@ class WorkOrderActionController extends Controller
         ]);
 
         $this->recordMobileEvent($request, $workOrder, 'schedule_update_requested', ['change_request_id' => $change->id]);
+        AuditLog::record($request, 'api.work_order.schedule_update_requested', $change, ['work_order_id' => $workOrder->id]);
         $this->notifyOtherParticipant($request, $workOrder, 'Schedule update requested', $request->user()->name.' requested a schedule update for '.$workOrder->jobPost->title.'.', 'schedule_update_requested');
 
         return response()->json(['data' => $change->load('requester:id,name')], 201);
@@ -301,6 +309,7 @@ class WorkOrderActionController extends Controller
         }
 
         $this->recordMobileEvent($request, $workOrder, 'dispute_opened', ['dispute_id' => $dispute->id]);
+        AuditLog::record($request, 'api.dispute.opened', $dispute, ['work_order_id' => $workOrder->id]);
         $this->notifyOtherParticipant($request, $workOrder, 'Dispute opened', $request->user()->name.' opened a dispute for '.$workOrder->jobPost->title.'.', 'dispute_opened');
 
         return response()->json(['data' => $dispute->load('openedBy:id,name')], 201);

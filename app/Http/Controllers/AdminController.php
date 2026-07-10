@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attachment;
+use App\Models\AuditLog;
 use App\Models\Dispute;
 use App\Models\ExternalProfileImport;
 use App\Models\JobPost;
+use App\Models\ModerationReport;
 use App\Models\Review;
 use App\Models\User;
 use App\Models\WorkOrder;
@@ -39,6 +41,15 @@ class AdminController extends Controller
                 ->whereIn('verification_status', ['provider_attested', 'needs_more_proof'])
                 ->latest()
                 ->limit(10)
+                ->get(),
+            'moderationReports' => ModerationReport::with('reporter', 'reportable')
+                ->whereIn('status', ['open', 'reviewing'])
+                ->latest()
+                ->limit(15)
+                ->get(),
+            'auditLogs' => AuditLog::with('actor', 'auditable')
+                ->latest()
+                ->limit(20)
                 ->get(),
         ]);
     }

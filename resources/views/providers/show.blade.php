@@ -89,6 +89,7 @@
             <x-attachments :attachments="$profile->attachments" />
             <x-rating-summary :ratings="$profile->ratings" />
             <x-rating-form type="provider_profile" :id="$profile->id" category="provider_overall" />
+            <x-moderation-report-form type="provider_profile" :id="$profile->id" />
         </section>
 
         <section class="tse-panel p-6">

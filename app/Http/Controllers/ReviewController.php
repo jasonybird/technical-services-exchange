@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Review;
+use App\Models\AuditLog;
 use App\Models\WorkOrder;
 use App\Notifications\ExchangeEventNotification;
 use Illuminate\Http\RedirectResponse;
@@ -102,6 +103,10 @@ class ReviewController extends Controller
             'moderation_status' => 'reported',
         ]);
 
+        AuditLog::record($request, 'review.reported', $review, [
+            'work_order_id' => $review->work_order_id,
+        ]);
+
         return redirect()->route('work-orders.show', $review->work_order_id)->with('status', 'Review reported for moderation.');
     }
 
@@ -119,6 +124,10 @@ class ReviewController extends Controller
             'moderation_notes' => $data['moderation_notes'] ?? null,
             'moderated_by_id' => $request->user()->id,
             'moderated_at' => now(),
+        ]);
+
+        AuditLog::record($request, 'review.moderated', $review, [
+            'moderation_status' => $data['moderation_status'],
         ]);
 
         return redirect()->route('admin.index')->with('status', 'Review moderation updated.');

@@ -27,6 +27,12 @@ class ExchangeEventNotification extends Notification
      */
     public function via(object $notifiable): array
     {
+        $preferences = $notifiable->notificationPreference()->firstOrCreate([]);
+
+        if (! $preferences->allows($this->type, 'database')) {
+            return [];
+        }
+
         return ['database'];
     }
 

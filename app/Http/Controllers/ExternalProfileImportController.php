@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ExternalProfileImport;
+use App\Models\AuditLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -73,6 +74,10 @@ class ExternalProfileImportController extends Controller
             'verification_status' => $data['verification_status'],
             'verified_by_id' => $request->user()->id,
             'verified_at' => now(),
+        ]);
+
+        AuditLog::record($request, 'provider_import.verified', $import, [
+            'verification_status' => $data['verification_status'],
         ]);
 
         return back()->with('status', 'Imported history verification updated.');

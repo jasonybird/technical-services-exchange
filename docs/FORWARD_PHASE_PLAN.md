@@ -599,6 +599,17 @@ Provider-protection rules:
 - Critical work-order events should remain visible in app even if email/push is off.
 - No modal begging for notifications.
 
+Implementation status:
+
+- Completed first implementation pass alongside Phase 13A.
+- Added notification preference editing on the notifications page.
+- Added channel intent controls for in-app, email, and future push without enabling email/push delivery prematurely.
+- Added category controls for matching jobs, quote updates, work-order activity, reviews/reputation, and disputes/moderation.
+- Added event-level controls for specific notification types.
+- Added digest preference and quiet-hours fields for future email/push delivery policy.
+- Added notification gating in `ExchangeEventNotification` so existing send paths respect user preferences.
+- Verified with Windows `php artisan test`.
+
 ## Phase 13 - Moderation, Admin Operations, And Audit Logs
 
 Purpose:
@@ -647,6 +658,17 @@ Provider-protection rules:
 - Moderation should be reviewable.
 - A buyer should not be able to silently damage a provider's reputation.
 - A provider should be able to see what changed and why.
+
+Implementation status:
+
+- Completed first implementation pass alongside Phase 12A.
+- Added reusable `audit_logs` for admin and operational actions.
+- Added audit writes for review reports/moderation, imported-history verification, attachment deletion, work-order transitions, change requests, contact events, quote acceptance, and mobile API actions.
+- Added reusable `moderation_reports` for provider profiles, buyer profiles, jobs, and attachments.
+- Added report forms to public profile, job, and attachment surfaces.
+- Expanded the admin console with open moderation reports and a recent audit log panel.
+- Added admin triage controls for moderation reports.
+- Verified with Windows `php artisan test`.
 
 ## Phase 14 - Deployment, Scaling, And Reliability Hardening
 
@@ -729,10 +751,10 @@ Provider-protection rules:
 
 ## Recommended Immediate Sequence
 
-1. Phase 12A: notification preference UI and event-channel controls.
-2. Phase 13A: audit logs and moderation/operations queues.
-3. Phase 14A: deployment/scaling hardening.
-4. Phase 15A: UX polish and accessibility pass.
+1. Phase 14A: deployment/scaling hardening.
+2. Phase 15A: UX polish and accessibility pass.
+3. Future mobile/API expansion after native app requirements are clearer.
+4. Future email/push delivery implementation after the sender and push providers are explicitly selected.
 
 ## Key Design Commitments
 

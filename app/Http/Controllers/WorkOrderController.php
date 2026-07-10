@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\WorkOrder;
+use App\Models\AuditLog;
 use App\Models\WorkOrderChangeRequest;
 use App\Models\WorkOrderContactEvent;
 use App\Notifications\ExchangeEventNotification;
@@ -113,6 +114,10 @@ class WorkOrderController extends Controller
 
         $workOrder->update($updates);
 
+        AuditLog::record($request, 'work_order.transitioned', $workOrder, [
+            'status' => $status,
+        ]);
+
         $recipient = $request->user()->id === $workOrder->buyer_id
             ? $workOrder->provider
             : $workOrder->buyer;
@@ -186,6 +191,11 @@ class WorkOrderController extends Controller
             'status' => 'open',
         ]);
 
+        AuditLog::record($request, 'work_order.change_requested', $changeRequest, [
+            'work_order_id' => $workOrder->id,
+            'reason_code' => $changeRequest->reason_code,
+        ]);
+
         $recipient = $request->user()->id === $workOrder->buyer_id
             ? $workOrder->provider
             : $workOrder->buyer;
@@ -218,6 +228,10 @@ class WorkOrderController extends Controller
             'responded_at' => now(),
         ]);
 
+        AuditLog::record($request, 'work_order.change_resolved', $changeRequest, [
+            'status' => $data['status'],
+        ]);
+
         return redirect()->route('work-orders.show', $workOrder)->with('status', 'Change request updated.');
     }
 
@@ -237,6 +251,11 @@ class WorkOrderController extends Controller
         $event = $workOrder->contactEvents()->create($data + [
             'user_id' => $request->user()->id,
             'attempted_at' => $data['attempted_at'] ?? now(),
+        ]);
+
+        AuditLog::record($request, 'work_order.contact_event', $event, [
+            'work_order_id' => $workOrder->id,
+            'event_type' => $event->event_type,
         ]);
 
         $workOrder->buyer->notify(new ExchangeEventNotification(

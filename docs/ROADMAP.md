@@ -26,6 +26,8 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 - Peer-review disputes with comments, evidence, structured recommendations, and public vote breakdowns.
 - Universal community ratings for buyers, providers, job posts, work orders, and disputes.
 - Database notification events and notification inbox.
+- Notification preference UI with category controls, event-level gates, digest/quiet-hours settings, and stored email/push intent for future channels.
+- Admin governance with moderation reports for profiles/jobs/attachments, expanded moderation queues, and reusable audit logs.
 - Versioned Sanctum API surface for future app clients, including mobile-safe work-order actions, token ability checks, action audit records, and optional geolocation evidence.
 - Baseline API/security hardening with rate limiting and HTTP security headers.
 - MIT license and no-payment/no-rate-setting guardrails.
@@ -59,11 +61,11 @@ Provider Exchange is a Laravel application for a provider-centered field-service
 
 ## Phase Checkpoint
 
-Phases 1-11A have been implemented locally through mobile-safe API actions and baseline security hardening. The next active planning block is:
+Phases 1-13A have been implemented locally through notification preferences, moderation reporting, and audit logging. The next active planning block is:
 
-8. Notification preference UI and event-channel controls.
-9. Admin operations, audit logs, and moderation queues.
-10. Deployment/scaling hardening and UX/accessibility polish.
+8. Deployment/scaling hardening.
+9. UX/accessibility polish.
+10. Future email/push delivery and native-app API expansion once providers are selected.
 
 Work-order safeguards to carry into the next implementation passes:
 
@@ -144,6 +146,16 @@ Phase 11A mobile API and security hardening completed:
 - Geolocation is optional and documented in the API response as work-order evidence only.
 - API routes are throttled through an explicit `api` rate limiter.
 - Application responses include baseline security headers: content-type sniffing protection, same-origin frame policy, strict origin referrer policy, limited permissions policy, and HSTS on secure requests.
+
+Phase 12A/13A notification and admin governance completed:
+
+- Notification settings now live on the notifications page with in-app, email intent, push intent, digest, quiet-hours, category, and event-level controls.
+- `ExchangeEventNotification` gates database notifications through user preferences while defaulting existing users to enabled.
+- Email and push settings are stored as explicit intent, but no email/push delivery is enabled until those providers are selected.
+- Users can report provider profiles, buyer profiles, jobs, and attachments for moderation.
+- Admins can triage moderation reports from the admin console.
+- Audit logs record selected operational and moderation events, including review moderation, imported-history verification, attachment deletion, work-order actions, quote acceptance, and mobile API actions.
+- Admins can review recent audit activity from the admin console.
 
 Available-work safeguards to carry into directory and job-list phases:
 
